@@ -1,0 +1,64 @@
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+Pro:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import 'maplibre-gl/dist/maplibre-gl.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --arc-red: #ED1B2E;
+  --arc-black: #1a1a1a;
+  --arc-white: #ffffff;
+  --arc-gray-900: #2d2d2d;
+  --arc-gray-700: #4a4a4a;
+  --arc-gray-500: #737373;
+  --arc-gray-300: #a3a3a3;
+  --arc-gray-100: #e5e5e5;
+  --arc-cream: #f7f5f2;
+  --arc-info: #1e4a6d;
+  --arc-success: #2d5a27;
+  --arc-caution: #b8860b;
+  --arc-alert: #c41e3a;
+  --font-headline: 'Libre Baskerville', Georgia, serif;
+  --font-body: 'Source Sans Pro', 'Helvetica Neue', sans-serif;
+  --font-data: 'IBM Plex Mono', Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  background: var(--arc-cream);
+  color: var(--arc-gray-900);
+  line-height: 1.5;
+  height: 100%;
+}
+
+html.dark, html.dark body {
+  background: var(--arc-black);
+  color: var(--arc-cream);
+}
+
+.font-headline { font-family: var(--font-headline); }
+.font-body { font-family: var(--font-body); }
+.font-data { font-family: var(--font-data); }
+
+.red-rule { width: 40px; height: 3px; background: var(--arc-red); }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--arc-cream); }
+::-webkit-scrollbar-thumb { background: var(--arc-gray-300); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--arc-gray-500); }
+
+html.dark ::-webkit-scrollbar-track { background: var(--arc-black); }
+html.dark ::-webkit-scrollbar-thumb { background: var(--arc-gray-700); }
+html.dark ::-webkit-scrollbar-thumb:hover { background: var(--arc-gray-500); }
+
+.map-container {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  position: relative;
+}
