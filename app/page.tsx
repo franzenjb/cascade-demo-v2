@@ -66,31 +66,6 @@ const FULL_BY_CATEGORY: Partial<Record<AssetType, DrillAsset[]>> = (() => {
 
 type BBox = [[number, number], [number, number]];
 
-function boundsForRows(rows: { lat: number; lon: number }[]): BBox | null {
-  if (rows.length === 0) return null;
-  let minLng = rows[0].lon;
-  let maxLng = rows[0].lon;
-  let minLat = rows[0].lat;
-  let maxLat = rows[0].lat;
-  for (const r of rows) {
-    if (r.lon < minLng) minLng = r.lon;
-    if (r.lon > maxLng) maxLng = r.lon;
-    if (r.lat < minLat) minLat = r.lat;
-    if (r.lat > maxLat) maxLat = r.lat;
-  }
-  if (minLng === maxLng && minLat === maxLat) {
-    const pad = 0.02;
-    return [
-      [minLng - pad, minLat - pad],
-      [maxLng + pad, maxLat + pad],
-    ];
-  }
-  return [
-    [minLng, minLat],
-    [maxLng, maxLat],
-  ];
-}
-
 function boundsForInstructions(
   instrs: MapInstruction[],
 ): BBox | null {
@@ -132,15 +107,6 @@ function boundsForInstructions(
   return [
     [minLng, minLat],
     [maxLng, maxLat],
-  ];
-}
-
-function unionBounds(a: BBox | null, b: BBox | null): BBox | null {
-  if (!a) return b;
-  if (!b) return a;
-  return [
-    [Math.min(a[0][0], b[0][0]), Math.min(a[0][1], b[0][1])],
-    [Math.max(a[1][0], b[1][0]), Math.max(a[1][1], b[1][1])],
   ];
 }
 
@@ -464,15 +430,21 @@ export default function Page() {
     if (!inFootprint) setDrillScope("all");
   };
 
+  const focusWholeView = () => {
+    const warnB = boundsForInstructions(instructions);
+    if (warnB) {
+      setFocusTarget({ bounds: warnB, padding: 80, maxZoom: 13 });
+    } else {
+      setFocusTarget({ center: CENTER, zoom: ZOOM });
+    }
+  };
+
   const handleAllChip = () => {
     setActiveCategory(null);
     setHighlightId(null);
     setRightTab("drill");
     setAccordionResetSignal((n) => n + 1);
-    const assetB = boundsForRows(FULL_ASSETS);
-    const warnB = boundsForInstructions(instructions);
-    const b = unionBounds(assetB, warnB);
-    if (b) setFocusTarget({ bounds: b, padding: 80, maxZoom: 11 });
+    focusWholeView();
     setAssetVisibility(allOn());
   };
 
@@ -480,13 +452,7 @@ export default function Page() {
     setActiveCategory(cat);
     setRightTab("drill");
     setHighlightId(null);
-    // Every chip returns the map to the same wide view as "All" — we just
-    // change the visibility filter. Keeps the tornado path in frame so the
-    // user can see where each asset type sits relative to the warning.
-    const assetB = boundsForRows(FULL_ASSETS);
-    const warnB = boundsForInstructions(instructions);
-    const b = unionBounds(assetB, warnB);
-    if (b) setFocusTarget({ bounds: b, padding: 80, maxZoom: 11 });
+    focusWholeView();
     setAssetVisibility(onlyThis(cat));
   };
 
