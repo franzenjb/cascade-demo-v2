@@ -159,7 +159,7 @@ export default function ChatPanel({
             onKeyDown={(e) => e.key === "Enter" && submit()}
             disabled={streaming}
             placeholder={streaming ? "Thinking…" : "Ask about Pinellas County…"}
-            className="flex-1 px-3 py-2 text-sm rounded border border-arc-gray-300 bg-white dark:bg-arc-black dark:border-arc-gray-700 dark:text-arc-cream focus:outline-none focus:border-arc-red"
+            className="flex-1 px-3 py-2 text-sm rounded border border-arc-gray-300 bg-white text-arc-gray-900 placeholder:text-arc-gray-500 dark:bg-arc-black dark:border-arc-gray-700 dark:text-arc-cream dark:placeholder:text-arc-gray-300 focus:outline-none focus:border-arc-red"
           />
           <button
             onClick={submit}

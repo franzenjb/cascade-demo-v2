@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ASSET_TYPES, type AssetLayerVisibility, type AssetType } from "./MapView";
+import { AssetIcon } from "./AssetIcons";
 
 interface Props {
   visibility: AssetLayerVisibility;
@@ -64,10 +65,7 @@ export default function LayerPanel({ visibility, onChange }: Props) {
                 onChange={() => toggle(key)}
                 className="w-3.5 h-3.5 accent-arc-maroon"
               />
-              <span
-                className="inline-block w-2.5 h-2.5 rounded-full ring-1 ring-white shadow-sm"
-                style={{ backgroundColor: color }}
-              />
+              <AssetIcon type={key} color={color} size={18} title={label} />
               <span className="text-[11px] text-arc-gray-900 dark:text-arc-cream">
                 {label}
               </span>

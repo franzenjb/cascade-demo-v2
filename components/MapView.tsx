@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import maplibregl, { Map as MlMap } from "maplibre-gl";
 import type { MapInstruction } from "@/lib/types";
 import assetsJson from "@/data/pinellas_assets.json";
+import { assetIconSVG } from "./AssetIcons";
 
 const POSITRON_STYLE = "https://tiles.openfreemap.org/styles/positron";
 
@@ -72,10 +73,31 @@ export default function MapView({
     map.addControl(new maplibregl.NavigationControl(), "top-right");
     mapRef.current = map;
 
-    const initAssetLayers = () => {
+    const loadIconImage = (key: AssetType, color: string): Promise<void> =>
+      new Promise((resolve) => {
+        const imageName = `cascade-asset-icon-${key}`;
+        if (map.hasImage(imageName)) return resolve();
+        const svg = assetIconSVG(key, color, 48);
+        const img = new Image(48, 48);
+        img.onload = () => {
+          if (!map.hasImage(imageName)) {
+            map.addImage(imageName, img, { pixelRatio: 2 });
+          }
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+      });
+
+    const initAssetLayers = async () => {
       if (assetLayersInitRef.current) return;
       assetLayersInitRef.current = true;
-      for (const { key, color } of ASSET_TYPES) {
+
+      await Promise.all(
+        ASSET_TYPES.map(({ key, color }) => loadIconImage(key, color)),
+      );
+
+      for (const { key } of ASSET_TYPES) {
         const subset = ASSETS.filter((a) => a.type === key);
         const fc: GeoJSON.FeatureCollection = {
           type: "FeatureCollection",
@@ -94,29 +116,28 @@ export default function MapView({
         if (!map.getSource(sourceId)) {
           map.addSource(sourceId, { type: "geojson", data: fc });
         }
-        if (!map.getLayer(`${sourceId}-circle`)) {
+        if (!map.getLayer(`${sourceId}-symbol`)) {
           map.addLayer({
-            id: `${sourceId}-circle`,
-            type: "circle",
+            id: `${sourceId}-symbol`,
+            type: "symbol",
             source: sourceId,
-            paint: {
-              "circle-radius": [
+            layout: {
+              "icon-image": `cascade-asset-icon-${key}`,
+              "icon-size": [
                 "interpolate",
                 ["linear"],
                 ["zoom"],
                 8,
-                3,
+                0.28,
                 11,
-                5,
+                0.45,
                 14,
-                8,
+                0.7,
               ],
-              "circle-color": color,
-              "circle-stroke-width": 1.5,
-              "circle-stroke-color": "#ffffff",
-              "circle-opacity": 0.95,
+              "icon-allow-overlap": true,
+              "icon-anchor": "center",
+              visibility: "visible",
             },
-            layout: { visibility: "visible" },
           });
         }
         if (!map.getLayer(`${sourceId}-label`)) {
@@ -128,7 +149,7 @@ export default function MapView({
             layout: {
               "text-field": ["get", "name"],
               "text-size": 11,
-              "text-offset": [0, 1.1],
+              "text-offset": [0, 1.4],
               "text-anchor": "top",
               "text-allow-overlap": false,
               visibility: "visible",
@@ -143,7 +164,7 @@ export default function MapView({
       }
 
       for (const { key } of ASSET_TYPES) {
-        map.on("click", `cascade-asset-${key}-circle`, (e) => {
+        map.on("click", `cascade-asset-${key}-symbol`, (e) => {
           const f = e.features?.[0];
           if (!f) return;
           const p = f.properties || {};
@@ -159,10 +180,10 @@ export default function MapView({
             )
             .addTo(map);
         });
-        map.on("mouseenter", `cascade-asset-${key}-circle`, () => {
+        map.on("mouseenter", `cascade-asset-${key}-symbol`, () => {
           map.getCanvas().style.cursor = "pointer";
         });
-        map.on("mouseleave", `cascade-asset-${key}-circle`, () => {
+        map.on("mouseleave", `cascade-asset-${key}-symbol`, () => {
           map.getCanvas().style.cursor = "";
         });
       }
@@ -184,8 +205,8 @@ export default function MapView({
     const apply = () => {
       for (const { key } of ASSET_TYPES) {
         const vis = assetVisibility[key] ? "visible" : "none";
-        if (map.getLayer(`cascade-asset-${key}-circle`)) {
-          map.setLayoutProperty(`cascade-asset-${key}-circle`, "visibility", vis);
+        if (map.getLayer(`cascade-asset-${key}-symbol`)) {
+          map.setLayoutProperty(`cascade-asset-${key}-symbol`, "visibility", vis);
         }
         if (map.getLayer(`cascade-asset-${key}-label`)) {
           map.setLayoutProperty(`cascade-asset-${key}-label`, "visibility", vis);
