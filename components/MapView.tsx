@@ -44,12 +44,20 @@ interface RawAsset {
 }
 const ASSETS = (assetsJson as { assets: RawAsset[] }).assets;
 
+export type FocusTarget =
+  | { center: [number, number]; zoom: number }
+  | {
+      bounds: [[number, number], [number, number]];
+      padding?: number;
+      maxZoom?: number;
+    };
+
 interface Props {
   center: [number, number];
   zoom: number;
   instructions: MapInstruction[];
   clearSignal?: number;
-  focusTarget?: { center: [number, number]; zoom: number } | null;
+  focusTarget?: FocusTarget | null;
   assetVisibility?: AssetLayerVisibility;
   onAssetClick?: (asset: DrillAsset) => void;
 }
@@ -285,14 +293,24 @@ export default function MapView({
     if (!focusTarget) return;
     const map = mapRef.current;
     if (!map) return;
-    const fly = () =>
-      map.flyTo({
-        center: focusTarget.center,
-        zoom: focusTarget.zoom,
-        essential: true,
-      });
-    if (map.isStyleLoaded()) fly();
-    else map.once("load", fly);
+    const run = () => {
+      if ("bounds" in focusTarget) {
+        map.fitBounds(focusTarget.bounds, {
+          padding: focusTarget.padding ?? 60,
+          maxZoom: focusTarget.maxZoom ?? 13,
+          duration: 800,
+          essential: true,
+        });
+      } else {
+        map.flyTo({
+          center: focusTarget.center,
+          zoom: focusTarget.zoom,
+          essential: true,
+        });
+      }
+    };
+    if (map.isStyleLoaded()) run();
+    else map.once("load", run);
   }, [focusTarget]);
 
   useEffect(() => {

@@ -17,6 +17,7 @@ import {
   ASSET_TYPES,
   type AssetLayerVisibility,
   type AssetType,
+  type FocusTarget,
 } from "@/components/MapView";
 import assetsJson from "@/data/pinellas_assets.json";
 
@@ -59,6 +60,45 @@ const FULL_BY_CATEGORY: Partial<Record<AssetType, DrillAsset[]>> = (() => {
   return g;
 })();
 
+function boundsForRows(
+  rows: { lat: number; lon: number }[],
+): [[number, number], [number, number]] | null {
+  if (rows.length === 0) return null;
+  let minLng = rows[0].lon;
+  let maxLng = rows[0].lon;
+  let minLat = rows[0].lat;
+  let maxLat = rows[0].lat;
+  for (const r of rows) {
+    if (r.lon < minLng) minLng = r.lon;
+    if (r.lon > maxLng) maxLng = r.lon;
+    if (r.lat < minLat) minLat = r.lat;
+    if (r.lat > maxLat) maxLat = r.lat;
+  }
+  if (minLng === maxLng && minLat === maxLat) {
+    const pad = 0.02;
+    return [
+      [minLng - pad, minLat - pad],
+      [maxLng + pad, maxLat + pad],
+    ];
+  }
+  return [
+    [minLng, minLat],
+    [maxLng, maxLat],
+  ];
+}
+
+function allOn(): AssetLayerVisibility {
+  return Object.fromEntries(
+    ASSET_TYPES.map((t) => [t.key, true]),
+  ) as AssetLayerVisibility;
+}
+
+function onlyThis(cat: AssetType): AssetLayerVisibility {
+  return Object.fromEntries(
+    ASSET_TYPES.map((t) => [t.key, t.key === cat]),
+  ) as AssetLayerVisibility;
+}
+
 interface ActiveWarning {
   nwsEventId: string;
   expires: string;
@@ -91,9 +131,7 @@ export default function Page() {
   const [triggerDirective, setTriggerDirective] = useState<string | null>(null);
   const [scenarioId, setScenarioId] = useState<string | null>(null);
   const [clearSignal, setClearSignal] = useState(0);
-  const [focusTarget, setFocusTarget] = useState<
-    { center: [number, number]; zoom: number } | null
-  >(null);
+  const [focusTarget, setFocusTarget] = useState<FocusTarget | null>(null);
   const [assetVisibility, setAssetVisibility] =
     useState<AssetLayerVisibility>(DEFAULT_VISIBILITY);
   const [activeWarning, setActiveWarning] = useState<ActiveWarning | null>(null);
@@ -330,12 +368,22 @@ export default function Page() {
     setHighlightId(null);
     setRightTab("drill");
     setAccordionResetSignal((n) => n + 1);
+    const b = boundsForRows(FULL_ASSETS);
+    if (b) setFocusTarget({ bounds: b, padding: 80, maxZoom: 11 });
+    setAssetVisibility(allOn());
   };
 
   const handleTypeChip = (cat: AssetType) => {
     setActiveCategory(cat);
     setRightTab("drill");
     setHighlightId(null);
+    const rows =
+      hasFootprint && drillScope === "footprint"
+        ? footprintByCategory[cat] ?? []
+        : FULL_BY_CATEGORY[cat] ?? [];
+    const b = boundsForRows(rows);
+    if (b) setFocusTarget({ bounds: b, padding: 80, maxZoom: 13 });
+    setAssetVisibility(onlyThis(cat));
   };
 
   const copyBriefing = async () => {
