@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import type { AssetType } from "./MapView";
 
 export interface DrillAsset {
@@ -25,8 +26,19 @@ export default function DrillPanel({
   assets,
   onSelect,
   highlightId,
-}: Props) {
+  emptyLabel,
+}: Props & { emptyLabel?: string }) {
   const cfg = configFor(category, assets);
+  const highlightedRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (highlightId && highlightedRef.current) {
+      highlightedRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, [highlightId]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
@@ -38,7 +50,7 @@ export default function DrillPanel({
       <div className="flex-1 overflow-y-auto divide-y divide-arc-gray-100 dark:divide-arc-gray-700">
         {assets.length === 0 && (
           <div className="p-4 text-xs text-arc-gray-500 dark:text-arc-gray-300 italic">
-            No {cfg.title.toLowerCase()} inside the warning footprint.
+            {emptyLabel ?? `No ${cfg.title.toLowerCase()} inside the warning footprint.`}
           </div>
         )}
         {assets.map((a) => {
@@ -48,6 +60,7 @@ export default function DrillPanel({
             <button
               key={a.id}
               type="button"
+              ref={isHighlighted ? highlightedRef : undefined}
               onClick={clickable ? () => onSelect?.(a) : undefined}
               disabled={!clickable}
               className={`w-full text-left p-3 text-xs transition-colors ${

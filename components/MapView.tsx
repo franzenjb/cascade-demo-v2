@@ -5,6 +5,7 @@ import maplibregl, { Map as MlMap } from "maplibre-gl";
 import type { MapInstruction } from "@/lib/types";
 import assetsJson from "@/data/pinellas_assets.json";
 import { assetIconSVG } from "./AssetIcons";
+import type { DrillAsset } from "./DrillPanel";
 
 const BASEMAPS: { name: string; url: string }[] = [
   { name: "Light", url: "https://tiles.openfreemap.org/styles/positron" },
@@ -50,6 +51,7 @@ interface Props {
   clearSignal?: number;
   focusTarget?: { center: [number, number]; zoom: number } | null;
   assetVisibility?: AssetLayerVisibility;
+  onAssetClick?: (asset: DrillAsset) => void;
 }
 
 export default function MapView({
@@ -59,6 +61,7 @@ export default function MapView({
   clearSignal,
   focusTarget,
   assetVisibility,
+  onAssetClick,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
@@ -67,10 +70,12 @@ export default function MapView({
   const assetLayersInitRef = useRef(false);
   const initAssetLayersRef = useRef<(() => Promise<void>) | null>(null);
   const instructionsRef = useRef<MapInstruction[]>([]);
+  const onAssetClickRef = useRef<typeof onAssetClick>(undefined);
   const [basemapIdx, setBasemapIdx] = useState(0);
   const [pickerOpen, setPickerOpen] = useState(false);
 
   instructionsRef.current = instructions;
+  onAssetClickRef.current = onAssetClick;
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -178,21 +183,18 @@ export default function MapView({
           const f = e.features?.[0];
           if (!f) return;
           const p = f.properties || {};
-          const coords = (f.geometry as GeoJSON.Point).coordinates.slice() as [
-            number,
-            number,
-          ];
-          const typeLabel = ASSET_TYPES.find((t) => t.key === key)?.label || key;
-          new maplibregl.Popup({ closeButton: true })
-            .setLngLat(coords)
-            .setHTML(
-              `<div style="font-family:system-ui;font-size:12px;line-height:1.45;color:#111827;background:#ffffff;padding:2px 4px">
-                <div style="font-weight:700;font-size:13px;color:#111827;margin-bottom:2px">${p.name}</div>
-                <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:#a51c30;font-weight:600;margin-bottom:4px">${typeLabel}</div>
-                <div style="color:#374151">${p.address}, ${p.city}</div>
-              </div>`,
-            )
-            .addTo(map);
+          const raw = ASSETS.find((a) => a.id === p.id);
+          if (!raw) return;
+          onAssetClickRef.current?.({
+            id: raw.id,
+            type: raw.type,
+            name: raw.name,
+            lat: raw.lat,
+            lon: raw.lon,
+            address: raw.address,
+            city: raw.city,
+            attrs: raw.attrs,
+          });
         });
         map.on("mouseenter", `cascade-asset-${key}-symbol`, () => {
           map.getCanvas().style.cursor = "pointer";
