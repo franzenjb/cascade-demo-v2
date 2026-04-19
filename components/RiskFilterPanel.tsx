@@ -44,7 +44,7 @@ export default function RiskFilterPanel({ value, onChange }: Props) {
       : 0;
 
   return (
-    <div className="absolute top-3 left-3 z-20 bg-white/95 dark:bg-arc-gray-900/95 backdrop-blur rounded-md shadow-lg border border-arc-gray-300 dark:border-arc-gray-700 min-w-[260px] max-w-[320px]">
+    <div className="absolute top-[56px] left-3 z-20 bg-white/95 dark:bg-arc-gray-900/95 backdrop-blur rounded-md shadow-lg border border-arc-gray-300 dark:border-arc-gray-700 min-w-[260px] max-w-[320px]">
       <button
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-data uppercase tracking-wider text-arc-black dark:text-arc-cream hover:bg-arc-cream/60 dark:hover:bg-arc-black/40"
