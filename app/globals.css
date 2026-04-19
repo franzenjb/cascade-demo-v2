@@ -62,3 +62,21 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: var(--arc-gray-500); }
   min-height: 400px;
   position: relative;
 }
+
+/* Force readable popups regardless of html.dark theme */
+.maplibregl-popup-content {
+  background: #ffffff !important;
+  color: #111827 !important;
+  padding: 10px 14px !important;
+  border-radius: 4px !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+}
+.maplibregl-popup-tip {
+  border-top-color: #ffffff !important;
+  border-bottom-color: #ffffff !important;
+}
+.maplibregl-popup-close-button {
+  color: #6b7280 !important;
+  font-size: 16px !important;
+  padding: 0 6px !important;
+}

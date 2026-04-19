@@ -186,7 +186,11 @@ export default function MapView({
           new maplibregl.Popup({ closeButton: true })
             .setLngLat(coords)
             .setHTML(
-              `<div style="font-family:system-ui;font-size:12px;line-height:1.4"><strong>${p.name}</strong><br/><span style="color:#6b7280">${typeLabel}</span><br/>${p.address}, ${p.city}</div>`,
+              `<div style="font-family:system-ui;font-size:12px;line-height:1.45;color:#111827;background:#ffffff;padding:2px 4px">
+                <div style="font-weight:700;font-size:13px;color:#111827;margin-bottom:2px">${p.name}</div>
+                <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:#a51c30;font-weight:600;margin-bottom:4px">${typeLabel}</div>
+                <div style="color:#374151">${p.address}, ${p.city}</div>
+              </div>`,
             )
             .addTo(map);
         });
