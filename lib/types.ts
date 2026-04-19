@@ -57,7 +57,19 @@ export interface GeoJSONPoint {
   coordinates: [number, number];
 }
 
-export type GeoJSONGeometry = GeoJSONPolygon | GeoJSONPoint;
+export interface GeoJSONFeatureCollection {
+  type: "FeatureCollection";
+  features: Array<{
+    type: "Feature";
+    geometry: GeoJSONPolygon | GeoJSONPoint | { type: string; coordinates: unknown };
+    properties?: Record<string, unknown> | null;
+  }>;
+}
+
+export type GeoJSONGeometry =
+  | GeoJSONPolygon
+  | GeoJSONPoint
+  | GeoJSONFeatureCollection;
 
 export interface ChatMessage {
   role: "user" | "assistant";
