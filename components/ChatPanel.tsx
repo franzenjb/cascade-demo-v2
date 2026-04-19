@@ -10,11 +10,14 @@ interface Props {
   onAssistantDelta: (text: string) => void;
   onMapInstruction: (m: MapInstruction) => void;
   onTurnEnd: () => void;
+  onToolCall?: (name: string) => void;
+  onToolResult?: (name: string, parsed: Record<string, unknown>) => void;
   streaming: boolean;
   setStreaming: (v: boolean) => void;
   triggerDirective?: string | null;
   scenarioId?: string | null;
   onTriggerConsumed?: () => void;
+  toolActivity?: string | null;
 }
 
 export default function ChatPanel({
@@ -23,11 +26,14 @@ export default function ChatPanel({
   onAssistantDelta,
   onMapInstruction,
   onTurnEnd,
+  onToolCall,
+  onToolResult,
   streaming,
   setStreaming,
   triggerDirective,
   scenarioId,
   onTriggerConsumed,
+  toolActivity,
 }: Props) {
   const [input, setInput] = useState("");
   const consumedRef = useRef<string | null>(null);
@@ -72,6 +78,17 @@ export default function ChatPanel({
               onAssistantDelta(evt.content);
             } else if (evt.type === "map_instruction" && evt.mapInstruction) {
               onMapInstruction(evt.mapInstruction);
+            } else if (evt.type === "tool_call" && evt.toolName) {
+              onToolCall?.(evt.toolName);
+            } else if (evt.type === "tool_result" && evt.toolName && evt.toolResult) {
+              try {
+                const parsed = JSON.parse(evt.toolResult);
+                if (parsed && typeof parsed === "object") {
+                  onToolResult?.(evt.toolName, parsed as Record<string, unknown>);
+                }
+              } catch {
+                // non-JSON tool result — skip structured forward
+              }
             } else if (evt.type === "error") {
               onAssistantDelta(`\n\n[Error: ${evt.error}]`);
             }
@@ -150,6 +167,12 @@ export default function ChatPanel({
             </div>
           </div>
         ))}
+        {streaming && toolActivity && (
+          <div className="flex items-center gap-2 text-[10px] font-data uppercase tracking-wider text-arc-gray-500 dark:text-arc-gray-300">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-arc-red animate-pulse" />
+            Calling <span className="font-semibold text-arc-maroon dark:text-arc-cream">{toolActivity}</span>
+          </div>
+        )}
       </div>
       <div className="border-t border-arc-gray-100 dark:border-arc-gray-700 p-3">
         <div className="flex gap-2">
