@@ -83,6 +83,8 @@ export interface MapInstruction {
     color?: string;
     opacity?: number;
     label?: string;
+    lineWidth?: number;
+    lineOpacity?: number;
   };
   layer_label?: string;
 }

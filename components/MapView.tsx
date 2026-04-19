@@ -404,6 +404,8 @@ function replayInstruction(
   map.addSource(id, { type: "geojson", data });
   const color = inst.style?.color || "#ED1B2E";
   const opacity = inst.style?.opacity ?? 0.35;
+  const lineWidth = inst.style?.lineWidth ?? 2;
+  const lineOpacity = inst.style?.lineOpacity ?? 0.9;
   const firstSymbol = map
     .getStyle()
     .layers?.find(
@@ -424,7 +426,11 @@ function replayInstruction(
       id: `${id}-line`,
       type: "line",
       source: id,
-      paint: { "line-color": color, "line-width": 2, "line-opacity": 0.9 },
+      paint: {
+        "line-color": color,
+        "line-width": lineWidth,
+        "line-opacity": lineOpacity,
+      },
       filter: ["in", ["geometry-type"], ["literal", ["Polygon", "LineString"]]],
     },
     firstSymbol,
