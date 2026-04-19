@@ -7,7 +7,7 @@ import assetsJson from "@/data/pinellas_assets.json";
 import { assetIconSVG } from "./AssetIcons";
 import type { DrillAsset } from "./DrillPanel";
 import type { RiskFilter, RiskMode } from "./RiskFilterPanel";
-import { buildTractPopupHTML, type TractPopupProps } from "@/lib/tract-popup";
+import type { TractPopupProps } from "@/lib/tract-popup";
 
 const BASEMAPS: { name: string; url: string }[] = [
   { name: "Light", url: "https://tiles.openfreemap.org/styles/positron" },
@@ -64,6 +64,7 @@ interface Props {
   onAssetClick?: (asset: DrillAsset) => void;
   riskFilter?: RiskFilter;
   onTractsLoaded?: (tracts: TractPopupProps[]) => void;
+  onTractClick?: (tract: TractPopupProps) => void;
 }
 
 type TractFC = GeoJSON.FeatureCollection<GeoJSON.Polygon | GeoJSON.MultiPolygon, TractPopupProps>;
@@ -147,6 +148,7 @@ export default function MapView({
   onAssetClick,
   riskFilter,
   onTractsLoaded,
+  onTractClick,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
@@ -160,12 +162,14 @@ export default function MapView({
   const instructionsRef = useRef<MapInstruction[]>([]);
   const onAssetClickRef = useRef<typeof onAssetClick>(undefined);
   const onTractsLoadedRef = useRef<typeof onTractsLoaded>(undefined);
+  const onTractClickRef = useRef<typeof onTractClick>(undefined);
   const [basemapIdx, setBasemapIdx] = useState(0);
   const [pickerOpen, setPickerOpen] = useState(false);
 
   instructionsRef.current = instructions;
   onAssetClickRef.current = onAssetClick;
   onTractsLoadedRef.current = onTractsLoaded;
+  onTractClickRef.current = onTractClick;
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -349,11 +353,7 @@ export default function MapView({
         if (!f) return;
         const p = f.properties as unknown as TractPopupProps;
         if (!p || !p.geoid) return;
-        const html = buildTractPopupHTML(p);
-        new maplibregl.Popup({ closeOnClick: true, maxWidth: "360px" })
-          .setLngLat(e.lngLat)
-          .setHTML(html)
-          .addTo(map);
+        onTractClickRef.current?.(p);
       });
       map.on("mouseenter", "cascade-tract-fill", () => {
         map.getCanvas().style.cursor = "pointer";

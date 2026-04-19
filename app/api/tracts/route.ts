@@ -68,6 +68,13 @@ export async function GET() {
       } catch {
         // leave as [0,0]
       }
+      let bbox: [number, number, number, number] = [0, 0, 0, 0];
+      try {
+        const b = turf.bbox(t as GeoJSON.Feature<GeoJSON.Polygon>);
+        bbox = [b[0], b[1], b[2], b[3]];
+      } catch {
+        // leave as zeros
+      }
       const place = centroid[0] !== 0 ? nearestPlace(centroid[1], centroid[0]) : "";
       const shortName = (t.properties.NAME || "").replace(/^Census Tract\s+/i, "");
 
@@ -94,6 +101,10 @@ export async function GET() {
           label: place ? `${place} — Tract ${shortName}` : `Tract ${shortName}`,
           centroid_lng: centroid[0],
           centroid_lat: centroid[1],
+          xmin: bbox[0],
+          ymin: bbox[1],
+          xmax: bbox[2],
+          ymax: bbox[3],
           pop: svi?.e_totpop != null ? Number(svi.e_totpop) : null,
           svi_pct,
           svi_theme1: svi?.rpl_theme1 != null ? Number(svi.rpl_theme1) : null,

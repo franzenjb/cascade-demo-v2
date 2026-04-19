@@ -12,6 +12,7 @@ import TriggerButton from "@/components/TriggerButton";
 import LayerPanel from "@/components/LayerPanel";
 import DrillPanel, { type DrillAsset } from "@/components/DrillPanel";
 import AllAssetsAccordion from "@/components/AllAssetsAccordion";
+import TractPanel from "@/components/TractPanel";
 import { AssetIcon } from "@/components/AssetIcons";
 import {
   ASSET_TYPES,
@@ -125,7 +126,7 @@ interface SituationMetrics {
   aliceStruggling: number | null;
 }
 
-type RightTab = "conversation" | "drill";
+type RightTab = "conversation" | "drill" | "tract";
 type DrillScope = "footprint" | "all";
 
 export default function Page() {
@@ -159,6 +160,9 @@ export default function Page() {
     nriMin: 60,
   });
   const [tracts, setTracts] = useState<TractPopupProps[]>([]);
+  const [selectedTract, setSelectedTract] = useState<TractPopupProps | null>(
+    null,
+  );
 
   const footprintIdsByCategory = useMemo(() => {
     const g: Partial<Record<AssetType, Set<string>>> = {};
@@ -362,15 +366,25 @@ export default function Page() {
     setFocusTarget({ center: [a.lon, a.lat], zoom: 14 });
   };
 
+  const handleTractClick = (t: TractPopupProps) => {
+    setSelectedTract(t);
+    setRightTab("tract");
+    if (t.centroid_lng && t.centroid_lat) {
+      setFocusTarget({
+        center: [t.centroid_lng, t.centroid_lat],
+        zoom: 13,
+      });
+    }
+  };
+
   const flyToTract = (nameOrGeoid: string) => {
+    const short = nameOrGeoid.replace(/^Census Tract\s+/i, "");
     const hit = tracts.find(
-      (t) => t.geoid === nameOrGeoid || t.name === nameOrGeoid,
+      (t) =>
+        t.geoid === nameOrGeoid || t.name === nameOrGeoid || t.name === short,
     );
-    if (!hit || !hit.centroid_lng || !hit.centroid_lat) return;
-    setFocusTarget({
-      center: [hit.centroid_lng as number, hit.centroid_lat as number],
-      zoom: 13,
-    });
+    if (!hit) return;
+    handleTractClick(hit);
   };
 
   const shortTractName = (raw: string) =>
@@ -615,6 +629,7 @@ export default function Page() {
             onAssetClick={handleAssetClick}
             riskFilter={riskFilter}
             onTractsLoaded={setTracts}
+            onTractClick={handleTractClick}
           />
           <RiskFilterPanel value={riskFilter} onChange={setRiskFilter} />
           <LayerPanel
@@ -635,6 +650,16 @@ export default function Page() {
               onClick={() => setRightTab("drill")}
               label={activeCategoryLabel}
               count={assetTabCount}
+            />
+            <TabButton
+              active={rightTab === "tract"}
+              onClick={() => setRightTab("tract")}
+              label={
+                selectedTract
+                  ? selectedTract.place || `Tract ${selectedTract.name}`
+                  : "Tract"
+              }
+              count={selectedTract ? 1 : 0}
             />
             <div className="ml-auto pr-2 flex gap-1">
               {streamTick > 0 && (
@@ -694,6 +719,7 @@ export default function Page() {
               resetSignal={accordionResetSignal}
             />
           )}
+          {rightTab === "tract" && <TractPanel tract={selectedTract} />}
         </div>
       </div>
 

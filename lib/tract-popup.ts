@@ -5,6 +5,10 @@ export interface TractPopupProps {
   label: string;
   centroid_lng: number;
   centroid_lat: number;
+  xmin: number;
+  ymin: number;
+  xmax: number;
+  ymax: number;
   pop: number | null;
   svi_pct: number | null; // 0..1
   svi_theme1: number | null;
