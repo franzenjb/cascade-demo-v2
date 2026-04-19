@@ -219,7 +219,7 @@ export function configFor(category: AssetType, rows: DrillAsset[]): CategoryConf
                   label: "Shelter cap",
                   value: Number(a.shelter_capacity).toLocaleString(),
                 },
-              a.operational_status && {
+              a.operational_status != null && a.operational_status !== "" && {
                 label: "Status",
                 value: String(a.operational_status),
               },
