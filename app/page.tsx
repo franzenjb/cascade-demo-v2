@@ -65,9 +65,9 @@ const FULL_BY_CATEGORY: Partial<Record<AssetType, DrillAsset[]>> = (() => {
   return g;
 })();
 
-function boundsForRows(
-  rows: { lat: number; lon: number }[],
-): [[number, number], [number, number]] | null {
+type BBox = [[number, number], [number, number]];
+
+function boundsForRows(rows: { lat: number; lon: number }[]): BBox | null {
   if (rows.length === 0) return null;
   let minLng = rows[0].lon;
   let maxLng = rows[0].lon;
@@ -89,6 +89,59 @@ function boundsForRows(
   return [
     [minLng, minLat],
     [maxLng, maxLat],
+  ];
+}
+
+function boundsForInstructions(
+  instrs: MapInstruction[],
+): BBox | null {
+  let minLng = Infinity,
+    minLat = Infinity,
+    maxLng = -Infinity,
+    maxLat = -Infinity;
+  const walk = (coords: unknown) => {
+    if (!Array.isArray(coords)) return;
+    if (
+      coords.length >= 2 &&
+      typeof coords[0] === "number" &&
+      typeof coords[1] === "number"
+    ) {
+      const lng = coords[0] as number;
+      const lat = coords[1] as number;
+      if (lng < minLng) minLng = lng;
+      if (lat < minLat) minLat = lat;
+      if (lng > maxLng) maxLng = lng;
+      if (lat > maxLat) maxLat = lat;
+      return;
+    }
+    for (const c of coords) walk(c);
+  };
+  for (const inst of instrs) {
+    if (inst.action !== "draw" || !inst.geometry) continue;
+    const g = inst.geometry as unknown as {
+      type?: string;
+      coordinates?: unknown;
+      features?: Array<{ geometry?: { coordinates?: unknown } }>;
+    };
+    if (g.type === "FeatureCollection" && g.features) {
+      for (const f of g.features) walk(f.geometry?.coordinates);
+    } else {
+      walk(g.coordinates);
+    }
+  }
+  if (!Number.isFinite(minLng) || !Number.isFinite(minLat)) return null;
+  return [
+    [minLng, minLat],
+    [maxLng, maxLat],
+  ];
+}
+
+function unionBounds(a: BBox | null, b: BBox | null): BBox | null {
+  if (!a) return b;
+  if (!b) return a;
+  return [
+    [Math.min(a[0][0], b[0][0]), Math.min(a[0][1], b[0][1])],
+    [Math.max(a[1][0], b[1][0]), Math.max(a[1][1], b[1][1])],
   ];
 }
 
@@ -418,7 +471,9 @@ export default function Page() {
     setHighlightId(null);
     setRightTab("drill");
     setAccordionResetSignal((n) => n + 1);
-    const b = boundsForRows(FULL_ASSETS);
+    const assetB = boundsForRows(FULL_ASSETS);
+    const warnB = boundsForInstructions(instructions);
+    const b = unionBounds(assetB, warnB);
     if (b) setFocusTarget({ bounds: b, padding: 80, maxZoom: 11 });
     setAssetVisibility(allOn());
   };
@@ -431,8 +486,11 @@ export default function Page() {
       hasFootprint && drillScope === "footprint"
         ? footprintByCategory[cat] ?? []
         : FULL_BY_CATEGORY[cat] ?? [];
-    const b = boundsForRows(rows);
-    if (b) setFocusTarget({ bounds: b, padding: 80, maxZoom: 13 });
+    const assetB = boundsForRows(rows);
+    const warnB = boundsForInstructions(instructions);
+    // Show the assets plus the warning footprint so the user sees context.
+    const b = unionBounds(assetB, warnB);
+    if (b) setFocusTarget({ bounds: b, padding: 80, maxZoom: 12 });
     setAssetVisibility(onlyThis(cat));
   };
 

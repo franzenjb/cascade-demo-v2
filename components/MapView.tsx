@@ -349,6 +349,17 @@ export default function MapView({
       }
 
       map.on("click", "cascade-tract-fill", (e) => {
+        // Asset symbols always win — if any asset is under the cursor, let
+        // its own click handler fire and bail out here.
+        const assetLayerIds = ASSET_TYPES.map(
+          (t) => `cascade-asset-${t.key}-symbol`,
+        ).filter((id) => map.getLayer(id));
+        if (assetLayerIds.length) {
+          const hits = map.queryRenderedFeatures(e.point, {
+            layers: assetLayerIds,
+          });
+          if (hits.length > 0) return;
+        }
         const f = e.features?.[0];
         if (!f) return;
         const p = f.properties as unknown as TractPopupProps;

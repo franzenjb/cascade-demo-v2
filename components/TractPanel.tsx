@@ -165,12 +165,12 @@ export default function TractPanel({ tract }: Props) {
       <KV
         k="SVI percentile"
         v={sviPct != null ? `${sviPct}%` : "—"}
-        accent="#a51c30"
+        valueClass="text-[#a51c30] dark:text-[#ff8894]"
       />
       <KV
         k="NRI risk score"
         v={tract.nri_score != null ? tract.nri_score.toFixed(1) : "—"}
-        accent="#5b2b8c"
+        valueClass="text-[#5b2b8c] dark:text-[#c8a5ee]"
       />
 
       {/* SVI sub-themes */}
@@ -277,18 +277,17 @@ function Subhead({ children }: { children: React.ReactNode }) {
 function KV({
   k,
   v,
-  accent,
+  valueClass,
 }: {
   k: string;
   v: string;
-  accent?: string;
+  valueClass?: string;
 }) {
   return (
     <div className="flex items-center justify-between text-[12px] py-1">
       <span className="text-arc-gray-500 dark:text-arc-gray-300">{k}</span>
       <span
-        className="font-data font-semibold tabular-nums"
-        style={accent ? { color: accent } : undefined}
+        className={`font-data font-semibold tabular-nums ${valueClass ?? "text-arc-black dark:text-arc-cream"}`}
       >
         {v}
       </span>
