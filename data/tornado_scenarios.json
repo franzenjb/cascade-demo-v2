@@ -1,0 +1,30 @@
+{
+  "scenarios": [
+    {
+      "id": "tornado_pinellas_replay",
+      "name": "Central Pinellas Tornado Warning",
+      "description": "Demo scenario: NWS tornado warning across central Pinellas County, FL. Gulf entry near Seminole, projected NE through Largo and Pinellas Park, exiting into Tampa Bay near Gandy.",
+      "warning_type": "tornado",
+      "nws_event_id": "DEMO-TOR-FL-2026-0001",
+      "issued_offset_seconds": 0,
+      "expires_offset_seconds": 1800,
+      "focus_center": [-82.735, 27.920],
+      "focus_zoom": 11,
+      "impacted_cities": ["Seminole", "Largo", "Pinellas Park", "north St. Petersburg"],
+      "path_description": "NE across central Pinellas peninsula, Gulf-entry near Seminole, exiting into Tampa Bay near Gandy Boulevard.",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-82.825, 27.841],
+            [-82.597, 27.948],
+            [-82.654, 28.047],
+            [-82.863, 27.907],
+            [-82.825, 27.841]
+          ]
+        ]
+      },
+      "narrative_notes": "Numbers are not baked — every figure Claude reports is pulled live from CDC SVI / FEMA NRI / ALICE / Florida parcel data for the actual intersecting Pinellas tracts."
+    }
+  ]
+}

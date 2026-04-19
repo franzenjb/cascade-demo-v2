@@ -37,7 +37,7 @@ export function buildSystemPrompt(): Array<{
     },
     {
       type: "text",
-      text: `\n\n## Live Semantic Catalog\n\nAuthoritative registry of available data layers for Hillsborough County, FL.\n\n\`\`\`json\n${catalogJson}\n\`\`\``,
+      text: `\n\n## Live Semantic Catalog\n\nAuthoritative registry of available data layers for Pinellas County, FL.\n\n\`\`\`json\n${catalogJson}\n\`\`\``,
       cache_control: { type: "ephemeral" },
     },
   ];

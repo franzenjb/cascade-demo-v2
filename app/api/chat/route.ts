@@ -16,6 +16,8 @@ export const maxDuration = 60;
 interface ChatRequest {
   history: ChatMessage[];
   message: string;
+  trigger_directive?: string;
+  scenario_id?: string;
 }
 
 export async function POST(req: NextRequest) {
@@ -36,6 +38,13 @@ export async function POST(req: NextRequest) {
     });
   }
 
+  // When a trigger fires (NWS warning, scenario replay, etc.), the frontend
+  // sends the generated [SYSTEM EVENT] directive as `trigger_directive`.
+  // Prepend it to the user message so Claude's tool-use loop sees it first.
+  const userMessage = body.trigger_directive
+    ? `${body.trigger_directive}\n\n---\n\nUser follow-up: ${body.message}`
+    : body.message;
+
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
@@ -44,7 +53,7 @@ export async function POST(req: NextRequest) {
       };
 
       try {
-        for await (const event of chatWithTools(body.history || [], body.message)) {
+        for await (const event of chatWithTools(body.history || [], userMessage)) {
           emit(event);
         }
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));

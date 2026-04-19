@@ -15,7 +15,7 @@ const client = new Anthropic({
 });
 
 const MODEL = process.env.CLAUDE_MODEL || "claude-sonnet-4-6";
-const MAX_TOKENS = 2048;
+const MAX_TOKENS = 8192;
 const MAX_TOOL_ITERATIONS = 8;
 
 export interface ChatStreamEvent {

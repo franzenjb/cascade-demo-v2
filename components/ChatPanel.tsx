@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import type { ChatMessage, MapInstruction } from "@/lib/types";
 
@@ -12,6 +12,9 @@ interface Props {
   onTurnEnd: () => void;
   streaming: boolean;
   setStreaming: (v: boolean) => void;
+  triggerDirective?: string | null;
+  scenarioId?: string | null;
+  onTriggerConsumed?: () => void;
 }
 
 export default function ChatPanel({
@@ -22,13 +25,18 @@ export default function ChatPanel({
   onTurnEnd,
   streaming,
   setStreaming,
+  triggerDirective,
+  scenarioId,
+  onTriggerConsumed,
 }: Props) {
   const [input, setInput] = useState("");
+  const consumedRef = useRef<string | null>(null);
 
-  const submit = async () => {
-    const text = input.trim();
-    if (!text || streaming) return;
-    setInput("");
+  const runRequest = async (
+    text: string,
+    directive: string | null,
+    sid: string | null,
+  ) => {
     const userMsg: ChatMessage = { role: "user", content: text };
     onUserMessage(userMsg);
     setStreaming(true);
@@ -40,6 +48,8 @@ export default function ChatPanel({
         body: JSON.stringify({
           history: messages,
           message: text,
+          trigger_directive: directive || undefined,
+          scenario_id: sid || undefined,
         }),
       });
       if (!res.body) throw new Error("No response body");
@@ -79,17 +89,42 @@ export default function ChatPanel({
     }
   };
 
+  const submit = async () => {
+    const text = input.trim();
+    if (!text || streaming) return;
+    setInput("");
+    await runRequest(text, null, null);
+  };
+
+  useEffect(() => {
+    if (!triggerDirective) return;
+    if (streaming) return;
+    if (consumedRef.current === triggerDirective) return;
+    consumedRef.current = triggerDirective;
+    const sid = scenarioId ?? null;
+    runRequest(
+      "Produce the proactive situational briefing.",
+      triggerDirective,
+      sid,
+    );
+    onTriggerConsumed?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [triggerDirective, streaming]);
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
         {messages.length === 0 && (
           <div className="text-arc-gray-500 dark:text-arc-gray-300 text-sm">
             <p className="font-headline text-lg text-arc-gray-900 dark:text-arc-cream mb-2">
-              Hillsborough County, FL
+              Pinellas County, FL
             </p>
-            <p>Ask about vulnerability, disaster history, or parcel-level exposure. Examples:</p>
+            <p className="mb-2">
+              Press <span className="font-semibold text-arc-red">Simulate NWS Tornado Alert</span> to see the anticipatory briefing — Claude produces the situational report before you type a thing.
+            </p>
+            <p>Or ask directly:</p>
             <ul className="mt-2 ml-4 list-disc space-y-1">
-              <li>What are the most vulnerable tracts in Hillsborough?</li>
+              <li>What are the most vulnerable tracts in Pinellas?</li>
               <li>How many FEMA declarations has this county had?</li>
               <li>Which tracts have the highest hurricane risk?</li>
               <li>Give me a disaster-readiness briefing.</li>
@@ -123,7 +158,7 @@ export default function ChatPanel({
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && submit()}
             disabled={streaming}
-            placeholder={streaming ? "Thinking…" : "Ask about Hillsborough County…"}
+            placeholder={streaming ? "Thinking…" : "Ask about Pinellas County…"}
             className="flex-1 px-3 py-2 text-sm rounded border border-arc-gray-300 bg-white dark:bg-arc-black dark:border-arc-gray-700 dark:text-arc-cream focus:outline-none focus:border-arc-red"
           />
           <button

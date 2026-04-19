@@ -1,28 +1,28 @@
 {
-  "catalog_version": "0.1.0",
+  "catalog_version": "0.2.0",
   "last_updated": "2026-04-19",
   "data_notice": "All layers are real, public-record data. SVI (CDC), NRI (FEMA), ALICE (United Way), FEMA declarations (OpenFEMA), and census tract geometry (US Census TIGERweb). Parcel data is from Florida county property appraiser records via the florida-parcels microservice. No Red Cross internal operational data is exposed in this demo.",
   "county_context": {
-    "name": "Hillsborough",
+    "name": "Pinellas",
     "state": "FL",
-    "fips": "12057",
-    "population": 1478759,
-    "center": [-82.4572, 27.9506]
+    "fips": "12103",
+    "population": 959107,
+    "center": [-82.7500, 27.8800]
   },
   "layers": [
     {
-      "id": "hillsborough_tracts",
+      "id": "pinellas_tracts",
       "source": "tigerweb",
-      "source_ref": "TIGERweb Tracts_Blocks/MapServer/0",
+      "source_ref": "TIGERweb Tracts_Blocks/MapServer/0 (STATE=12, COUNTY=103)",
       "display_name": "Census Tracts (2020)",
       "aliases": ["tracts", "census tracts", "tract boundaries", "neighborhoods"],
       "disaster_relevance": {
         "hurricane": "high",
         "flood": "high",
-        "tornado": "medium",
+        "tornado": "high",
         "wildfire": "low"
       },
-      "why_it_matters": "Tracts are the unit of analysis for SVI and NRI. Join on 11-digit GEOID.",
+      "why_it_matters": "Tracts are the unit of analysis for SVI and NRI. Join on 11-digit GEOID. For a warning polygon, tracts are the primary unit for impact-area aggregation.",
       "schema": {
         "GEOID": "string (11-digit)",
         "NAME": "string",
@@ -34,9 +34,9 @@
       "known_limitations": "Tract boundaries are fixed decennially; demographic attributes live in svi/nri tables, not on the tract itself."
     },
     {
-      "id": "hillsborough_svi",
+      "id": "pinellas_svi",
       "source": "supabase",
-      "source_ref": "fl_svi (filtered stcnty=12057)",
+      "source_ref": "svi (filtered fips=like.12103*)",
       "display_name": "CDC Social Vulnerability Index",
       "aliases": ["SVI", "social vulnerability", "vulnerability index", "poverty", "minority status", "housing vulnerability"],
       "disaster_relevance": {
@@ -47,39 +47,37 @@
       },
       "why_it_matters": "The foundational vulnerability layer. Four themes: socioeconomic, household composition, minority/language, housing/transport. RPL_THEMES is the overall percentile rank (0–1, higher = more vulnerable).",
       "schema": {
-        "stcnty": "string (5-digit FIPS)",
-        "fips": "string (11-digit tract GEOID)",
+        "fips": "string (11-digit tract GEOID — filter with fips=like.12103* for Pinellas)",
+        "county": "string (e.g. 'Pinellas County')",
+        "st_abbr": "string (2-letter state, e.g. 'FL')",
         "rpl_themes": "number (0–1)",
         "rpl_theme1": "number (socioeconomic)",
         "rpl_theme2": "number (household composition)",
         "rpl_theme3": "number (minority/language)",
         "rpl_theme4": "number (housing/transport)",
-        "e_totpop": "integer",
-        "e_age65": "integer",
-        "e_disabl": "integer",
-        "e_limeng": "integer",
-        "e_pov": "integer"
+        "e_totpop": "integer"
       },
       "access_tier": "public",
       "data_vintage": "CDC SVI 2022 (latest release)",
       "known_limitations": "Percentile ranks are national; state/county context may differ."
     },
     {
-      "id": "hillsborough_nri",
+      "id": "pinellas_nri",
       "source": "supabase",
-      "source_ref": "fl_nri (filtered stcofips=12057)",
+      "source_ref": "nri (filtered tractfips=like.12103*)",
       "display_name": "FEMA National Risk Index",
       "aliases": ["NRI", "natural hazard risk", "hurricane risk", "flood risk", "tornado risk", "wildfire risk", "heat wave risk"],
       "disaster_relevance": {
         "hurricane": "high",
         "flood": "high",
         "tornado": "high",
-        "wildfire": "high"
+        "wildfire": "low"
       },
-      "why_it_matters": "Tract-level risk scores for 18 hazards, plus resilience and expected annual loss. For Hillsborough, hurricane and coastal-flood risks dominate.",
+      "why_it_matters": "Tract-level risk scores for 18 hazards, plus resilience and expected annual loss. For Pinellas, hurricane, coastal-flood, and storm-surge risks dominate; tornado risk is lower but non-trivial in the peninsula's severe-weather regimes.",
       "schema": {
-        "stcofips": "string (5-digit FIPS)",
-        "tractfips": "string (11-digit tract GEOID)",
+        "tractfips": "string (11-digit tract GEOID — filter with tractfips=like.12103* for Pinellas)",
+        "county": "string (e.g. 'Pinellas')",
+        "stateabbrv": "string (e.g. 'FL')",
         "risk_score": "number (composite)",
         "hrcn_risks": "number (hurricane)",
         "cfld_risks": "number (coastal flood)",
@@ -95,9 +93,9 @@
       "known_limitations": "Risk scores reflect historical frequency + modeled exposure; sub-tract variation is not captured."
     },
     {
-      "id": "hillsborough_alice",
+      "id": "pinellas_alice",
       "source": "supabase",
-      "source_ref": "fl_alice (filtered fips_5=12057)",
+      "source_ref": "alice (filtered fips_5=12103)",
       "display_name": "ALICE Financial Hardship",
       "aliases": ["ALICE", "poverty", "working poor", "financial hardship", "struggling households"],
       "disaster_relevance": {
@@ -120,9 +118,9 @@
       "known_limitations": "County-level only; tract-level ALICE is not released publicly."
     },
     {
-      "id": "hillsborough_fema_declarations",
+      "id": "pinellas_fema_declarations",
       "source": "supabase",
-      "source_ref": "fl_fema_declarations (filtered fips_5=12057)",
+      "source_ref": "fema_declarations (filtered fips_5=12103)",
       "display_name": "FEMA Disaster Declarations",
       "aliases": ["FEMA declarations", "disaster declarations", "federal disasters", "disaster history", "past disasters"],
       "disaster_relevance": {
@@ -131,7 +129,7 @@
         "tornado": "medium",
         "wildfire": "low"
       },
-      "why_it_matters": "Actual federally declared disasters for this county. Shows the real operational tempo — how often Hillsborough experiences a federally significant event and what types dominate.",
+      "why_it_matters": "Actual federally declared disasters for Pinellas. Shows the real operational tempo — Pinellas is among the most hurricane-declared counties in Florida.",
       "schema": {
         "fips_5": "string (5-digit county FIPS)",
         "total_declarations": "integer",
@@ -148,7 +146,7 @@
       "known_limitations": "Declarations are federal-level only; state and local disasters not included."
     },
     {
-      "id": "hillsborough_parcels",
+      "id": "pinellas_parcels",
       "source": "parcel_api",
       "source_ref": "florida-parcels-production-fd39.up.railway.app",
       "display_name": "Florida Property Parcels",
@@ -172,17 +170,79 @@
       },
       "access_tier": "public",
       "data_vintage": "Florida Dept. of Revenue assessor records (aggregated)",
-      "known_limitations": "Hillsborough County only for V2; other counties available via same API but not yet wired into tools."
+      "known_limitations": "Parcel API is statewide Florida; V2 demo is scoped to Pinellas bboxes."
+    },
+    {
+      "id": "pinellas_assets",
+      "source": "local_json",
+      "source_ref": "data/pinellas_assets.json",
+      "display_name": "Pinellas Operational Assets",
+      "aliases": ["assets", "landmarks", "schools", "hospitals", "fire stations", "police", "mobile home parks", "MHP", "Red Cross sites", "ERV depots", "shelters"],
+      "disaster_relevance": {
+        "hurricane": "high",
+        "flood": "high",
+        "tornado": "high",
+        "wildfire": "high"
+      },
+      "why_it_matters": "Named, mappable landmarks that turn abstract tract numbers into concrete places: 'Pinellas Park High School, enrollment 2,118' instead of 'tract 12103024510'. For tornado briefings, mobile home parks are especially weighted — MH residents are ~15× more likely to die in a tornado than site-built residents.",
+      "schema": {
+        "id": "string (unique: rc_001, sch_001, fire_001, etc.)",
+        "type": "string (red_cross | school | fire_station | police_station | mobile_home_park | hospital)",
+        "name": "string (human-readable)",
+        "lat": "number",
+        "lon": "number",
+        "address": "string",
+        "city": "string",
+        "attrs": "object (type-specific: enrollment, beds, units, capacity, sworn_officers, etc.)"
+      },
+      "access_tier": "public",
+      "data_vintage": "2026 curated (Phase 2 swaps to ArcGIS/HIFLD/FL DOE live feeds)",
+      "known_limitations": "Red Cross sites, mobile home parks, and aggregate counts (shelter capacity, enrollment, dialysis patients, MHP unit counts) are synthetic but plausible. Public-record schools, hospitals, and fire/police HQs use real names and approximate real coordinates. Schema matches ArcGIS/HIFLD feeds for drop-in swap."
+    },
+    {
+      "id": "active_warning",
+      "source": "none",
+      "source_ref": "in-memory scenario polygon (POST /api/trigger)",
+      "display_name": "Active NWS Warning Polygon",
+      "aliases": ["warning", "tornado warning", "active warning", "active event", "incident polygon"],
+      "disaster_relevance": {
+        "tornado": "high",
+        "hurricane": "high"
+      },
+      "why_it_matters": "The spatial footprint of the currently active event. Every impact number in the briefing is aggregated inside this polygon via get_tracts_intersecting_polygon.",
+      "schema": {
+        "type": "Polygon",
+        "coordinates": "number[][][] (GeoJSON ring array)"
+      },
+      "access_tier": "public",
+      "data_vintage": "real-time (or replay scenario)",
+      "known_limitations": "Demo uses a canned Pinellas polygon; production would consume api.weather.gov/alerts."
     }
   ],
   "disaster_playbooks": {
+    "tornado": {
+      "default_layers": [
+        "active_warning",
+        "pinellas_tracts",
+        "pinellas_svi",
+        "pinellas_alice",
+        "pinellas_assets"
+      ],
+      "narrative_structure": [
+        "warning_specifics_with_city_names",
+        "population_inside_with_svi_headline",
+        "named_landmarks_school_mhp_hospital_or_rc",
+        "alice_county_context",
+        "offer_next_step"
+      ]
+    },
     "hurricane": {
       "default_layers": [
-        "hillsborough_tracts",
-        "hillsborough_svi",
-        "hillsborough_nri",
-        "hillsborough_alice",
-        "hillsborough_fema_declarations"
+        "pinellas_tracts",
+        "pinellas_svi",
+        "pinellas_nri",
+        "pinellas_alice",
+        "pinellas_fema_declarations"
       ],
       "narrative_structure": [
         "historical_context",
@@ -194,10 +254,10 @@
     },
     "flood": {
       "default_layers": [
-        "hillsborough_tracts",
-        "hillsborough_svi",
-        "hillsborough_nri",
-        "hillsborough_parcels"
+        "pinellas_tracts",
+        "pinellas_svi",
+        "pinellas_nri",
+        "pinellas_parcels"
       ],
       "narrative_structure": [
         "flood_risk_profile",
@@ -206,25 +266,12 @@
         "offer_next_step"
       ]
     },
-    "tornado": {
-      "default_layers": [
-        "hillsborough_tracts",
-        "hillsborough_svi",
-        "hillsborough_nri"
-      ],
-      "narrative_structure": [
-        "warning_specifics",
-        "population_inside_with_demographics",
-        "vulnerability_highlights",
-        "offer_next_step"
-      ]
-    },
     "briefing": {
       "default_layers": [
-        "hillsborough_svi",
-        "hillsborough_nri",
-        "hillsborough_alice",
-        "hillsborough_fema_declarations"
+        "pinellas_svi",
+        "pinellas_nri",
+        "pinellas_alice",
+        "pinellas_fema_declarations"
       ],
       "narrative_structure": [
         "county_snapshot",

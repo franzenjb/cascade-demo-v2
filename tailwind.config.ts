@@ -10,6 +10,8 @@ const config: Config = {
     extend: {
       colors: {
         'arc-red': '#ED1B2E',
+        'arc-maroon': '#a51c30',
+        'arc-maroon-dark': '#7a1424',
         'arc-black': '#1a1a1a',
         'arc-gray': {
           900: '#2d2d2d',

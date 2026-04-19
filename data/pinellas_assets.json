@@ -1,0 +1,520 @@
+{
+  "_notice": "Curated synthetic-over-real Pinellas County asset layer. Public-record schools, hospitals, fire/police HQs use real names and approximate real coordinates. Red Cross sites, mobile home parks, and aggregate counts (shelter capacity, enrollment, dialysis patients, MHP unit counts) are synthetic but plausible. Phase 2 swaps synthetic fields for live ArcGIS/HIFLD/FL DOE feeds — the schema below matches those sources for a drop-in swap.",
+  "_schema": {
+    "id": "string (unique)",
+    "type": "red_cross | school | fire_station | police_station | mobile_home_park | hospital",
+    "name": "string (human-readable)",
+    "lat": "number",
+    "lon": "number",
+    "address": "string (street address)",
+    "city": "string",
+    "attrs": "object (type-specific: enrollment, beds, units, capacity, etc.)"
+  },
+  "assets": [
+    {
+      "id": "rc_001",
+      "type": "red_cross",
+      "name": "American Red Cross Central FL Region — Pinellas Chapter",
+      "lat": 27.7752,
+      "lon": -82.6415,
+      "address": "818 4th St N",
+      "city": "St. Petersburg",
+      "attrs": { "role": "chapter_office", "has_erv": true, "erv_count": 2, "shelter_capacity": 0, "operational_status": "open" }
+    },
+    {
+      "id": "rc_002",
+      "type": "red_cross",
+      "name": "Red Cross ERV Depot — Largo",
+      "lat": 27.9145,
+      "lon": -82.7878,
+      "address": "10500 Ulmerton Rd",
+      "city": "Largo",
+      "attrs": { "role": "erv_depot", "has_erv": true, "erv_count": 3, "shelter_capacity": 0, "operational_status": "open" }
+    },
+    {
+      "id": "rc_003",
+      "type": "red_cross",
+      "name": "Red Cross Volunteer Hub — Clearwater",
+      "lat": 27.9658,
+      "lon": -82.8001,
+      "address": "1655 Gulf to Bay Blvd",
+      "city": "Clearwater",
+      "attrs": { "role": "volunteer_hub", "has_erv": false, "erv_count": 0, "shelter_capacity": 0, "operational_status": "open" }
+    },
+    {
+      "id": "rc_004",
+      "type": "red_cross",
+      "name": "Red Cross Staging Site — Pinellas Park",
+      "lat": 27.8425,
+      "lon": -82.6995,
+      "address": "5600 Park Blvd",
+      "city": "Pinellas Park",
+      "attrs": { "role": "staging", "has_erv": true, "erv_count": 1, "shelter_capacity": 200, "operational_status": "standby" }
+    },
+    {
+      "id": "rc_005",
+      "type": "red_cross",
+      "name": "Red Cross DSC — Tarpon Springs",
+      "lat": 28.1464,
+      "lon": -82.7565,
+      "address": "300 S Pinellas Ave",
+      "city": "Tarpon Springs",
+      "attrs": { "role": "dsc", "has_erv": false, "erv_count": 0, "shelter_capacity": 0, "operational_status": "open" }
+    },
+    {
+      "id": "rc_006",
+      "type": "red_cross",
+      "name": "Red Cross Shelter Warehouse — Safety Harbor",
+      "lat": 28.0069,
+      "lon": -82.6926,
+      "address": "900 Main St",
+      "city": "Safety Harbor",
+      "attrs": { "role": "warehouse", "has_erv": false, "erv_count": 0, "shelter_capacity": 0, "operational_status": "open" }
+    },
+
+    {
+      "id": "sch_001",
+      "type": "school",
+      "name": "Pinellas Park High School",
+      "lat": 27.8474,
+      "lon": -82.7078,
+      "address": "6305 118th Ave N",
+      "city": "Pinellas Park",
+      "attrs": { "level": "high", "enrollment": 2118, "shelter_agreement": true, "has_generator": true }
+    },
+    {
+      "id": "sch_002",
+      "type": "school",
+      "name": "Seminole High School",
+      "lat": 27.8412,
+      "lon": -82.7923,
+      "address": "8401 131st St N",
+      "city": "Seminole",
+      "attrs": { "level": "high", "enrollment": 1954, "shelter_agreement": true, "has_generator": false }
+    },
+    {
+      "id": "sch_003",
+      "type": "school",
+      "name": "Largo High School",
+      "lat": 27.9195,
+      "lon": -82.7802,
+      "address": "410 Missouri Ave N",
+      "city": "Largo",
+      "attrs": { "level": "high", "enrollment": 2021, "shelter_agreement": true, "has_generator": true }
+    },
+    {
+      "id": "sch_004",
+      "type": "school",
+      "name": "St. Petersburg High School",
+      "lat": 27.7860,
+      "lon": -82.6537,
+      "address": "2501 5th Ave N",
+      "city": "St. Petersburg",
+      "attrs": { "level": "high", "enrollment": 2143, "shelter_agreement": false, "has_generator": true }
+    },
+    {
+      "id": "sch_005",
+      "type": "school",
+      "name": "Northeast High School",
+      "lat": 27.8102,
+      "lon": -82.6428,
+      "address": "5500 16th St N",
+      "city": "St. Petersburg",
+      "attrs": { "level": "high", "enrollment": 1512, "shelter_agreement": true, "has_generator": false }
+    },
+    {
+      "id": "sch_006",
+      "type": "school",
+      "name": "Clearwater High School",
+      "lat": 27.9658,
+      "lon": -82.7562,
+      "address": "540 S Hercules Ave",
+      "city": "Clearwater",
+      "attrs": { "level": "high", "enrollment": 1836, "shelter_agreement": true, "has_generator": true }
+    },
+    {
+      "id": "sch_007",
+      "type": "school",
+      "name": "Dunedin High School",
+      "lat": 28.0271,
+      "lon": -82.7841,
+      "address": "1651 Pinehurst Rd",
+      "city": "Dunedin",
+      "attrs": { "level": "high", "enrollment": 1408, "shelter_agreement": false, "has_generator": false }
+    },
+    {
+      "id": "sch_008",
+      "type": "school",
+      "name": "Countryside High School",
+      "lat": 28.0201,
+      "lon": -82.7302,
+      "address": "3000 State Road 580",
+      "city": "Clearwater",
+      "attrs": { "level": "high", "enrollment": 1812, "shelter_agreement": true, "has_generator": true }
+    },
+    {
+      "id": "sch_009",
+      "type": "school",
+      "name": "Gibbs High School",
+      "lat": 27.7837,
+      "lon": -82.6816,
+      "address": "850 34th St S",
+      "city": "St. Petersburg",
+      "attrs": { "level": "high", "enrollment": 1124, "shelter_agreement": true, "has_generator": false }
+    },
+    {
+      "id": "sch_010",
+      "type": "school",
+      "name": "Lakewood High School",
+      "lat": 27.7329,
+      "lon": -82.6597,
+      "address": "1400 54th Ave S",
+      "city": "St. Petersburg",
+      "attrs": { "level": "high", "enrollment": 1395, "shelter_agreement": false, "has_generator": true }
+    },
+    {
+      "id": "sch_011",
+      "type": "school",
+      "name": "Boca Ciega High School",
+      "lat": 27.7521,
+      "lon": -82.7276,
+      "address": "924 58th St S",
+      "city": "Gulfport",
+      "attrs": { "level": "high", "enrollment": 1687, "shelter_agreement": true, "has_generator": false }
+    },
+    {
+      "id": "sch_012",
+      "type": "school",
+      "name": "Dixie M. Hollins High School",
+      "lat": 27.8110,
+      "lon": -82.7398,
+      "address": "4940 62nd St N",
+      "city": "St. Petersburg",
+      "attrs": { "level": "high", "enrollment": 1612, "shelter_agreement": true, "has_generator": true }
+    },
+    {
+      "id": "sch_013",
+      "type": "school",
+      "name": "Osceola Fundamental High School",
+      "lat": 27.8845,
+      "lon": -82.8014,
+      "address": "9751 98th St N",
+      "city": "Seminole",
+      "attrs": { "level": "high", "enrollment": 1397, "shelter_agreement": false, "has_generator": false }
+    },
+    {
+      "id": "sch_014",
+      "type": "school",
+      "name": "East Lake High School",
+      "lat": 28.0968,
+      "lon": -82.6901,
+      "address": "1300 Silver Eagle Dr",
+      "city": "Tarpon Springs",
+      "attrs": { "level": "high", "enrollment": 1906, "shelter_agreement": true, "has_generator": true }
+    },
+    {
+      "id": "sch_015",
+      "type": "school",
+      "name": "Palm Harbor University High School",
+      "lat": 28.0672,
+      "lon": -82.7352,
+      "address": "1900 Omaha St",
+      "city": "Palm Harbor",
+      "attrs": { "level": "high", "enrollment": 2487, "shelter_agreement": true, "has_generator": true }
+    },
+
+    {
+      "id": "fire_001",
+      "type": "fire_station",
+      "name": "St. Petersburg Fire Station 1",
+      "lat": 27.7745,
+      "lon": -82.6356,
+      "address": "400 1st Ave N",
+      "city": "St. Petersburg",
+      "attrs": { "agency": "St. Petersburg Fire Rescue", "has_ladder": true, "staff_oncall": 14 }
+    },
+    {
+      "id": "fire_002",
+      "type": "fire_station",
+      "name": "St. Petersburg Fire Station 8",
+      "lat": 27.8034,
+      "lon": -82.6801,
+      "address": "4550 62nd Ave N",
+      "city": "St. Petersburg",
+      "attrs": { "agency": "St. Petersburg Fire Rescue", "has_ladder": false, "staff_oncall": 9 }
+    },
+    {
+      "id": "fire_003",
+      "type": "fire_station",
+      "name": "Clearwater Fire Station 45",
+      "lat": 27.9651,
+      "lon": -82.8085,
+      "address": "1140 Court St",
+      "city": "Clearwater",
+      "attrs": { "agency": "Clearwater Fire & Rescue", "has_ladder": true, "staff_oncall": 12 }
+    },
+    {
+      "id": "fire_004",
+      "type": "fire_station",
+      "name": "Largo Fire Station 38",
+      "lat": 27.9171,
+      "lon": -82.7876,
+      "address": "500 Highland Ave NE",
+      "city": "Largo",
+      "attrs": { "agency": "Largo Fire Rescue", "has_ladder": true, "staff_oncall": 11 }
+    },
+    {
+      "id": "fire_005",
+      "type": "fire_station",
+      "name": "Pinellas Park Fire Station 33",
+      "lat": 27.8394,
+      "lon": -82.6946,
+      "address": "5981 Park Blvd",
+      "city": "Pinellas Park",
+      "attrs": { "agency": "Pinellas Park Fire", "has_ladder": true, "staff_oncall": 10 }
+    },
+    {
+      "id": "fire_006",
+      "type": "fire_station",
+      "name": "Seminole Fire Rescue Station 29",
+      "lat": 27.8404,
+      "lon": -82.7901,
+      "address": "9099 113th St N",
+      "city": "Seminole",
+      "attrs": { "agency": "Seminole Fire Rescue", "has_ladder": false, "staff_oncall": 8 }
+    },
+    {
+      "id": "fire_007",
+      "type": "fire_station",
+      "name": "Dunedin Fire Station 60",
+      "lat": 28.0219,
+      "lon": -82.7731,
+      "address": "919 Patricia Ave",
+      "city": "Dunedin",
+      "attrs": { "agency": "Dunedin Fire Rescue", "has_ladder": true, "staff_oncall": 9 }
+    },
+    {
+      "id": "fire_008",
+      "type": "fire_station",
+      "name": "Palm Harbor Fire Rescue Station 65",
+      "lat": 28.0801,
+      "lon": -82.7659,
+      "address": "250 West Lake Rd",
+      "city": "Palm Harbor",
+      "attrs": { "agency": "Palm Harbor Fire Rescue", "has_ladder": true, "staff_oncall": 10 }
+    },
+
+    {
+      "id": "pol_001",
+      "type": "police_station",
+      "name": "St. Petersburg Police Department HQ",
+      "lat": 27.7735,
+      "lon": -82.6398,
+      "address": "1301 1st Ave N",
+      "city": "St. Petersburg",
+      "attrs": { "agency": "St. Petersburg PD", "sworn_officers": 563 }
+    },
+    {
+      "id": "pol_002",
+      "type": "police_station",
+      "name": "Clearwater Police Department HQ",
+      "lat": 27.9623,
+      "lon": -82.8067,
+      "address": "645 Pierce St",
+      "city": "Clearwater",
+      "attrs": { "agency": "Clearwater PD", "sworn_officers": 245 }
+    },
+    {
+      "id": "pol_003",
+      "type": "police_station",
+      "name": "Largo Police Department HQ",
+      "lat": 27.9145,
+      "lon": -82.7799,
+      "address": "201 Highland Ave NE",
+      "city": "Largo",
+      "attrs": { "agency": "Largo PD", "sworn_officers": 124 }
+    },
+    {
+      "id": "pol_004",
+      "type": "police_station",
+      "name": "Pinellas County Sheriff's Office HQ",
+      "lat": 27.9080,
+      "lon": -82.7744,
+      "address": "10750 Ulmerton Rd",
+      "city": "Largo",
+      "attrs": { "agency": "Pinellas County Sheriff", "sworn_officers": 956 }
+    },
+    {
+      "id": "pol_005",
+      "type": "police_station",
+      "name": "Pinellas Park Police Department HQ",
+      "lat": 27.8437,
+      "lon": -82.6998,
+      "address": "7700 59th St N",
+      "city": "Pinellas Park",
+      "attrs": { "agency": "Pinellas Park PD", "sworn_officers": 86 }
+    },
+
+    {
+      "id": "mhp_001",
+      "type": "mobile_home_park",
+      "name": "Whispering Pines Mobile Home Community",
+      "lat": 27.8199,
+      "lon": -82.6852,
+      "address": "5100 58th Ave N",
+      "city": "Lealman",
+      "attrs": { "units": 312, "occupancy_pct": 0.91, "median_age": 62, "pct_over_65": 0.58 }
+    },
+    {
+      "id": "mhp_002",
+      "type": "mobile_home_park",
+      "name": "Lealman Estates",
+      "lat": 27.8184,
+      "lon": -82.6774,
+      "address": "4201 54th Ave N",
+      "city": "Lealman",
+      "attrs": { "units": 187, "occupancy_pct": 0.87, "median_age": 58, "pct_over_65": 0.51 }
+    },
+    {
+      "id": "mhp_003",
+      "type": "mobile_home_park",
+      "name": "Ranchero Village",
+      "lat": 27.9248,
+      "lon": -82.7601,
+      "address": "17110 66th Way N",
+      "city": "Largo",
+      "attrs": { "units": 428, "occupancy_pct": 0.89, "median_age": 67, "pct_over_65": 0.64 }
+    },
+    {
+      "id": "mhp_004",
+      "type": "mobile_home_park",
+      "name": "Bay Ranch Mobile Home Park",
+      "lat": 27.8385,
+      "lon": -82.7012,
+      "address": "7000 66th St N",
+      "city": "Pinellas Park",
+      "attrs": { "units": 264, "occupancy_pct": 0.93, "median_age": 65, "pct_over_65": 0.61 }
+    },
+    {
+      "id": "mhp_005",
+      "type": "mobile_home_park",
+      "name": "Casa Loma Mobile Home Park",
+      "lat": 27.8471,
+      "lon": -82.6915,
+      "address": "8500 49th St N",
+      "city": "Pinellas Park",
+      "attrs": { "units": 198, "occupancy_pct": 0.85, "median_age": 61, "pct_over_65": 0.54 }
+    },
+    {
+      "id": "mhp_006",
+      "type": "mobile_home_park",
+      "name": "Holiday Travel Park",
+      "lat": 27.9287,
+      "lon": -82.7954,
+      "address": "12850 Walsingham Rd",
+      "city": "Largo",
+      "attrs": { "units": 356, "occupancy_pct": 0.88, "median_age": 64, "pct_over_65": 0.60 }
+    },
+    {
+      "id": "mhp_007",
+      "type": "mobile_home_park",
+      "name": "Mobile Gardens Mobile Home Park",
+      "lat": 27.9555,
+      "lon": -82.7687,
+      "address": "1985 Gulf to Bay Blvd",
+      "city": "Clearwater",
+      "attrs": { "units": 142, "occupancy_pct": 0.86, "median_age": 60, "pct_over_65": 0.53 }
+    },
+    {
+      "id": "mhp_008",
+      "type": "mobile_home_park",
+      "name": "Palm Tree Acres Mobile Home Park",
+      "lat": 27.8550,
+      "lon": -82.6881,
+      "address": "9100 49th St N",
+      "city": "Pinellas Park",
+      "attrs": { "units": 221, "occupancy_pct": 0.90, "median_age": 63, "pct_over_65": 0.57 }
+    },
+    {
+      "id": "mhp_009",
+      "type": "mobile_home_park",
+      "name": "Bayshore Mobile Home Park",
+      "lat": 27.7984,
+      "lon": -82.7211,
+      "address": "7800 38th Ave N",
+      "city": "St. Petersburg",
+      "attrs": { "units": 176, "occupancy_pct": 0.84, "median_age": 59, "pct_over_65": 0.49 }
+    },
+    {
+      "id": "mhp_010",
+      "type": "mobile_home_park",
+      "name": "Pinellas Cascades Mobile Home Park",
+      "lat": 27.8638,
+      "lon": -82.7219,
+      "address": "6380 102nd Ave N",
+      "city": "Pinellas Park",
+      "attrs": { "units": 304, "occupancy_pct": 0.92, "median_age": 66, "pct_over_65": 0.62 }
+    },
+
+    {
+      "id": "hosp_001",
+      "type": "hospital",
+      "name": "Morton Plant Hospital",
+      "lat": 27.9516,
+      "lon": -82.7912,
+      "address": "300 Pinellas St",
+      "city": "Clearwater",
+      "attrs": { "beds": 687, "has_er": true, "has_trauma_center": true, "home_dialysis_patients_served": 42, "has_generator": true }
+    },
+    {
+      "id": "hosp_002",
+      "type": "hospital",
+      "name": "Bayfront Health St. Petersburg",
+      "lat": 27.7682,
+      "lon": -82.6367,
+      "address": "701 6th St S",
+      "city": "St. Petersburg",
+      "attrs": { "beds": 480, "has_er": true, "has_trauma_center": true, "home_dialysis_patients_served": 38, "has_generator": true }
+    },
+    {
+      "id": "hosp_003",
+      "type": "hospital",
+      "name": "Largo Medical Center",
+      "lat": 27.9157,
+      "lon": -82.7944,
+      "address": "201 14th St SW",
+      "city": "Largo",
+      "attrs": { "beds": 455, "has_er": true, "has_trauma_center": false, "home_dialysis_patients_served": 31, "has_generator": true }
+    },
+    {
+      "id": "hosp_004",
+      "type": "hospital",
+      "name": "Johns Hopkins All Children's Hospital",
+      "lat": 27.7708,
+      "lon": -82.6411,
+      "address": "501 6th Ave S",
+      "city": "St. Petersburg",
+      "attrs": { "beds": 259, "has_er": true, "has_trauma_center": false, "home_dialysis_patients_served": 14, "has_generator": true }
+    },
+    {
+      "id": "hosp_005",
+      "type": "hospital",
+      "name": "Mease Countryside Hospital",
+      "lat": 28.0156,
+      "lon": -82.7258,
+      "address": "3231 McMullen Booth Rd",
+      "city": "Safety Harbor",
+      "attrs": { "beds": 311, "has_er": true, "has_trauma_center": false, "home_dialysis_patients_served": 22, "has_generator": true }
+    },
+    {
+      "id": "hosp_006",
+      "type": "hospital",
+      "name": "St. Petersburg General Hospital",
+      "lat": 27.8043,
+      "lon": -82.7107,
+      "address": "6500 38th Ave N",
+      "city": "St. Petersburg",
+      "attrs": { "beds": 219, "has_er": true, "has_trauma_center": false, "home_dialysis_patients_served": 17, "has_generator": false }
+    }
+  ]
+}
