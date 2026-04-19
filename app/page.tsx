@@ -511,6 +511,7 @@ export default function Page() {
 
   return (
     <main className="h-screen flex flex-col bg-arc-cream dark:bg-arc-black">
+      {/* Top bar — identity + alert status + simulate. No numeric tiles. */}
       <header className="bg-arc-maroon text-white shadow-md">
         <div className="px-4 py-2 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
@@ -523,16 +524,11 @@ export default function Page() {
                 </span>
               </h1>
               <p className="text-[10px] font-data uppercase tracking-widest text-white/70">
-                Pinellas County · FL · Operational Briefing Layer
+                Pinellas County · FL
               </p>
             </div>
           </div>
-
-          <div className="flex items-center gap-5 flex-wrap">
-            <Stat label="Population" value="959,107" />
-            <Stat label="Census Tracts" value="245" />
-            <Stat label="FEMA Declarations" value="36" />
-            <Stat label="% Struggling (ALICE)" value="25.2%" />
+          <div className="flex items-center gap-3">
             {activeWarning && (
               <div className="flex items-center gap-2 px-3 py-1 bg-arc-red/20 border border-arc-red animate-pulse">
                 <span className="w-2 h-2 bg-arc-red rounded-full" />
@@ -552,50 +548,86 @@ export default function Page() {
         <div className="h-[2px] bg-arc-red" />
       </header>
 
-      {metrics && (
-        <div className="border-b border-arc-gray-100 dark:border-arc-gray-700 bg-white dark:bg-arc-gray-900 px-4 py-3 flex gap-5 overflow-x-auto">
-          <Metric
-            label="Population in footprint"
-            value={
-              metrics.popInFootprint != null
-                ? metrics.popInFootprint.toLocaleString()
-                : "—"
-            }
-          />
-          <Metric
-            label="Impacted tracts"
-            value={metrics.tractCount != null ? String(metrics.tractCount) : "—"}
-          />
-          <Metric
-            label="High-vuln (≥ 0.9 SVI)"
-            value={
-              metrics.topVulnCount != null ? String(metrics.topVulnCount) : "—"
-            }
-            warn={(metrics.topVulnCount ?? 0) > 0}
-          />
-          <Metric
-            label="Named landmarks"
-            value={
-              metrics.totalAssets != null ? String(metrics.totalAssets) : "—"
-            }
-          />
-          {metrics.topTract && (
-            <Metric
-              label="Most vulnerable area"
-              value={
-                topTractPlace
-                  ? `${topTractPlace}`
-                  : `Tract ${shortTractName(metrics.topTract.name)}`
-              }
-              sub={
-                topTractPlace
-                  ? `Tract ${shortTractName(metrics.topTract.name)} · SVI ${((metrics.topTract.rpl_themes ?? 0) * 100).toFixed(0)}%`
-                  : `SVI ${((metrics.topTract.rpl_themes ?? 0) * 100).toFixed(0)}%`
-              }
-              warn
-              onClick={() => flyToTract(metrics.topTract!.geoid || metrics.topTract!.name)}
-            />
-          )}
+      {/* Hero impact card — one dominant number + actionable worst-area CTA.
+          Resting state when no warning. */}
+      {activeWarning && metrics ? (
+        <div className="border-b border-arc-gray-100 dark:border-arc-gray-700 bg-white dark:bg-arc-gray-900 px-6 py-4">
+          <div className="flex items-end justify-between gap-6 flex-wrap">
+            <div className="min-w-[220px]">
+              <div className="text-[10px] font-data uppercase tracking-widest text-arc-gray-500 dark:text-arc-gray-300 mb-1">
+                People at risk
+              </div>
+              <div className="font-headline font-bold text-4xl text-arc-red leading-none tabular-nums">
+                {metrics.popInFootprint != null
+                  ? metrics.popInFootprint.toLocaleString()
+                  : "—"}
+              </div>
+              <div className="mt-2 text-[12px] text-arc-gray-700 dark:text-arc-gray-300">
+                <span className="font-semibold tabular-nums">
+                  {metrics.tractCount ?? 0}
+                </span>{" "}
+                tracts impacted
+                {metrics.topVulnCount != null && metrics.topVulnCount > 0 && (
+                  <>
+                    {" · "}
+                    <span className="font-semibold text-arc-red tabular-nums">
+                      {metrics.topVulnCount}
+                    </span>{" "}
+                    high-vulnerability
+                  </>
+                )}
+                {metrics.totalAssets != null && (
+                  <>
+                    {" · "}
+                    <span className="font-semibold tabular-nums">
+                      {metrics.totalAssets}
+                    </span>{" "}
+                    landmarks
+                  </>
+                )}
+              </div>
+            </div>
+            {metrics.topTract && (
+              <button
+                type="button"
+                onClick={() =>
+                  flyToTract(
+                    metrics.topTract!.geoid || metrics.topTract!.name,
+                  )
+                }
+                className="flex flex-col items-start text-left px-4 py-2 bg-arc-cream/70 dark:bg-arc-black/30 border border-arc-gray-300 dark:border-arc-gray-700 hover:border-arc-maroon dark:hover:border-arc-red rounded transition-colors group"
+              >
+                <span className="text-[9px] font-data uppercase tracking-widest text-arc-gray-500 dark:text-arc-gray-300 group-hover:text-arc-maroon dark:group-hover:text-arc-red">
+                  Worst area →
+                </span>
+                <span className="font-headline font-bold text-xl text-arc-maroon dark:text-[#ff8894] leading-tight">
+                  {topTractPlace ??
+                    `Tract ${shortTractName(metrics.topTract.name)}`}
+                </span>
+                <span className="text-[11px] font-data text-arc-gray-500 dark:text-arc-gray-300 tabular-nums">
+                  Tract {shortTractName(metrics.topTract.name)} · SVI{" "}
+                  {((metrics.topTract.rpl_themes ?? 0) * 100).toFixed(0)}%
+                </span>
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="border-b border-arc-gray-100 dark:border-arc-gray-700 bg-white dark:bg-arc-gray-900 px-6 py-5">
+          <div className="text-[10px] font-data uppercase tracking-widest text-arc-gray-500 dark:text-arc-gray-300 mb-1">
+            Resting state
+          </div>
+          <div className="font-headline font-bold text-xl text-arc-black dark:text-arc-cream leading-tight">
+            No active warning — Pinellas County baseline
+          </div>
+          <div className="mt-2 text-[12px] text-arc-gray-500 dark:text-arc-gray-300">
+            Click{" "}
+            <span className="text-arc-red font-semibold">
+              Simulate NWS Tornado Alert
+            </span>{" "}
+            to load a demo warning, or browse {totalFullAssets} assets across{" "}
+            {ASSET_TYPES.length} categories below.
+          </div>
         </div>
       )}
 
@@ -670,6 +702,22 @@ export default function Page() {
             </button>
           </div>
         )}
+      </div>
+
+      {/* County baseline — static context, kept muted beneath the chips. */}
+      <div className="border-b border-arc-gray-100 dark:border-arc-gray-700 bg-arc-cream/40 dark:bg-arc-black/30 px-4 py-1 text-[10px] font-data uppercase tracking-widest text-arc-gray-500 dark:text-arc-gray-300 flex gap-4 overflow-x-auto whitespace-nowrap">
+        <span>
+          <span className="tabular-nums">959,107</span> pop
+        </span>
+        <span>
+          <span className="tabular-nums">245</span> tracts
+        </span>
+        <span>
+          <span className="tabular-nums">36</span> FEMA declarations
+        </span>
+        <span>
+          <span className="tabular-nums">25.2%</span> ALICE
+        </span>
       </div>
 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-[2fr_1fr] min-h-0">
@@ -822,67 +870,6 @@ export default function Page() {
 
 function prettyToolName(name: string): string {
   return name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col leading-tight">
-      <span className="text-[9px] font-data uppercase tracking-widest text-white/60">
-        {label}
-      </span>
-      <span className="text-sm font-data font-semibold">{value}</span>
-    </div>
-  );
-}
-
-function Metric({
-  label,
-  value,
-  sub,
-  warn,
-  onClick,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  warn?: boolean;
-  onClick?: () => void;
-}) {
-  const body = (
-    <>
-      <span className="text-[9px] font-data uppercase tracking-widest text-arc-gray-500 dark:text-arc-gray-300">
-        {label}
-      </span>
-      <span
-        className={`text-lg font-headline font-bold ${
-          warn ? "text-arc-red" : "text-arc-black dark:text-arc-cream"
-        }`}
-      >
-        {value}
-      </span>
-      {sub && (
-        <span className="text-[10px] font-data text-arc-gray-500 dark:text-arc-gray-300">
-          {sub}
-        </span>
-      )}
-    </>
-  );
-  if (onClick) {
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        className="flex flex-col leading-tight min-w-[110px] text-left hover:bg-arc-cream/70 dark:hover:bg-arc-black/40 rounded px-1 -mx-1 transition-colors cursor-pointer group"
-        title="Click to zoom to this area"
-      >
-        {body}
-        <span className="text-[9px] text-arc-maroon/70 dark:text-arc-red/70 font-data opacity-0 group-hover:opacity-100 transition-opacity">
-          click to zoom →
-        </span>
-      </button>
-    );
-  }
-  return <div className="flex flex-col leading-tight min-w-[110px]">{body}</div>;
 }
 
 function Chip({
