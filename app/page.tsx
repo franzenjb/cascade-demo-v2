@@ -84,7 +84,7 @@ export default function Page() {
   const [activeCategory, setActiveCategory] = useState<AssetType | null>(null);
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const [toolActivity, setToolActivity] = useState<string | null>(null);
-  const [streamFinishedOnce, setStreamFinishedOnce] = useState(false);
+  const [streamTick, setStreamTick] = useState(0);
 
   useEffect(() => {
     if (!activeWarning) {
@@ -186,13 +186,7 @@ export default function Page() {
 
   const onTurnEnd = () => {
     setToolActivity(null);
-    setStreamFinishedOnce(true);
-    const anyAssets = Object.values(assetsByCategory).some(
-      (arr) => arr && arr.length > 0
-    );
-    if (anyAssets && rightTab === "conversation") {
-      setRightTab("drill");
-    }
+    setStreamTick((n) => n + 1);
   };
 
   const handleTriggerFired = (payload: {
@@ -211,7 +205,7 @@ export default function Page() {
     setTopTracts([]);
     setActiveCategory(null);
     setHighlightId(null);
-    setStreamFinishedOnce(false);
+    setStreamTick(0);
     setRightTab("conversation");
     setClearSignal((n) => n + 1);
     setFocusTarget({ center: payload.focusCenter, zoom: payload.focusZoom });
@@ -244,6 +238,25 @@ export default function Page() {
     () => Object.values(drillCounts).reduce((s, n) => s + (n ?? 0), 0),
     [drillCounts]
   );
+
+  // After the stream finishes, if assets landed, flip to the assets tab.
+  // Uses a post-render effect so React has flushed all setState calls from
+  // the stream loop — onTurnEnd running inside a sync finally block can't
+  // see the latest assetsByCategory via closure.
+  useEffect(() => {
+    if (streamTick === 0) return;
+    if (totalAssetRows > 0 && rightTab === "conversation") {
+      setRightTab("drill");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [streamTick]);
+
+  const activeCategoryLabel = activeCategory
+    ? ASSET_TYPES.find((t) => t.key === activeCategory)?.label || "Assets"
+    : "Assets";
+
+  const assetTabCount =
+    activeCategory != null ? drillCounts[activeCategory] ?? 0 : totalAssetRows;
 
   const flyToAsset = (a: DrillAsset) => {
     setHighlightId(a.id);
@@ -404,15 +417,16 @@ export default function Page() {
               label="Conversation"
               count={messages.filter((m) => m.role === "assistant").length}
             />
-            <TabButton
-              active={rightTab === "drill"}
-              onClick={() => setRightTab("drill")}
-              label="Drill"
-              count={totalAssetRows}
-              disabled={totalAssetRows === 0}
-            />
+            {totalAssetRows > 0 && (
+              <TabButton
+                active={rightTab === "drill"}
+                onClick={() => setRightTab("drill")}
+                label={activeCategoryLabel}
+                count={assetTabCount}
+              />
+            )}
             <div className="ml-auto pr-2 flex gap-1">
-              {streamFinishedOnce && (
+              {streamTick > 0 && (
                 <>
                   <button
                     onClick={copyBriefing}

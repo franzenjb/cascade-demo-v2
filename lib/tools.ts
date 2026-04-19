@@ -418,7 +418,7 @@ async function execTractsIntersectingPolygon(
   const autoDrawInstruction: MapInstruction = {
     action: "draw",
     geometry: tractFeatureCollection as unknown as MapInstruction["geometry"],
-    style: { color: "#1E4A6D", opacity: 0.22, label: "Impacted Tracts" },
+    style: { color: "#1E4A6D", opacity: 0.08, label: "Impacted Tracts" },
     layer_label: "Impacted Tracts",
   };
 

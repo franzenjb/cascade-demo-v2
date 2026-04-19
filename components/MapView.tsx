@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import maplibregl, { Map as MlMap } from "maplibre-gl";
 import type { MapInstruction } from "@/lib/types";
 import assetsJson from "@/data/pinellas_assets.json";
 import { assetIconSVG } from "./AssetIcons";
 
-const POSITRON_STYLE = "https://tiles.openfreemap.org/styles/positron";
+const BASEMAPS: { name: string; url: string }[] = [
+  { name: "Light", url: "https://tiles.openfreemap.org/styles/positron" },
+  { name: "Streets", url: "https://tiles.openfreemap.org/styles/liberty" },
+  { name: "Bright", url: "https://tiles.openfreemap.org/styles/bright" },
+];
 
 export type AssetType =
   | "red_cross"
@@ -61,12 +65,18 @@ export default function MapView({
   const drawnCountRef = useRef(0);
   const appliedCountRef = useRef(0);
   const assetLayersInitRef = useRef(false);
+  const initAssetLayersRef = useRef<(() => Promise<void>) | null>(null);
+  const instructionsRef = useRef<MapInstruction[]>([]);
+  const [basemapIdx, setBasemapIdx] = useState(0);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  instructionsRef.current = instructions;
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: POSITRON_STYLE,
+      style: BASEMAPS[0].url,
       center,
       zoom,
     });
@@ -189,6 +199,8 @@ export default function MapView({
       }
     };
 
+    initAssetLayersRef.current = initAssetLayers;
+
     if (map.isStyleLoaded()) initAssetLayers();
     else map.on("load", initAssetLayers);
 
@@ -196,8 +208,29 @@ export default function MapView({
       map.remove();
       mapRef.current = null;
       assetLayersInitRef.current = false;
+      initAssetLayersRef.current = null;
     };
   }, [center, zoom]);
+
+  const currentStyleUrlRef = useRef<string>(BASEMAPS[0].url);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const url = BASEMAPS[basemapIdx].url;
+    if (currentStyleUrlRef.current === url) return;
+    currentStyleUrlRef.current = url;
+    map.setStyle(url);
+    map.once("style.load", async () => {
+      assetLayersInitRef.current = false;
+      drawnCountRef.current = 0;
+      appliedCountRef.current = 0;
+      await initAssetLayersRef.current?.();
+      const pending = instructionsRef.current;
+      appliedCountRef.current = pending.length;
+      for (const inst of pending) replayInstruction(map, inst, drawnCountRef);
+    });
+  }, [basemapIdx]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -263,67 +296,149 @@ export default function MapView({
     const apply = () => {
       const pending = instructions.slice(appliedCountRef.current);
       appliedCountRef.current = instructions.length;
-      for (const inst of pending) {
-        if (inst.action === "clear") {
-          const toRemoveLayers: string[] = [];
-          map.getStyle().layers?.forEach((l) => {
-            if (l.id.startsWith("cascade-draw-")) toRemoveLayers.push(l.id);
-          });
-          toRemoveLayers.forEach((id) => {
-            if (map.getLayer(id)) map.removeLayer(id);
-          });
-          const sources = Object.keys((map.getStyle().sources || {})).filter((s) =>
-            s.startsWith("cascade-draw-"),
-          );
-          sources.forEach((s) => {
-            if (map.getSource(s)) map.removeSource(s);
-          });
-          drawnCountRef.current = 0;
-          continue;
-        }
-
-        if (inst.action === "draw" && inst.geometry) {
-          const id = `cascade-draw-${drawnCountRef.current++}`;
-          const geom = inst.geometry as unknown as GeoJSON.Geometry | GeoJSON.FeatureCollection;
-          const data: GeoJSON.FeatureCollection =
-            (geom as GeoJSON.FeatureCollection).type === "FeatureCollection"
-              ? (geom as GeoJSON.FeatureCollection)
-              : {
-                  type: "FeatureCollection",
-                  features: [{ type: "Feature", geometry: geom as GeoJSON.Geometry, properties: {} }],
-                };
-          map.addSource(id, { type: "geojson", data });
-          const color = inst.style?.color || "#ED1B2E";
-          const opacity = inst.style?.opacity ?? 0.35;
-          // Polygon fill
-          map.addLayer({
-            id: `${id}-fill`,
-            type: "fill",
-            source: id,
-            paint: { "fill-color": color, "fill-opacity": opacity },
-            filter: ["==", ["geometry-type"], "Polygon"],
-          });
-          map.addLayer({
-            id: `${id}-line`,
-            type: "line",
-            source: id,
-            paint: { "line-color": color, "line-width": 2 },
-            filter: ["in", ["geometry-type"], ["literal", ["Polygon", "LineString"]]],
-          });
-          map.addLayer({
-            id: `${id}-point`,
-            type: "circle",
-            source: id,
-            paint: { "circle-color": color, "circle-radius": 6, "circle-stroke-width": 2, "circle-stroke-color": "#fff" },
-            filter: ["==", ["geometry-type"], "Point"],
-          });
-        }
-      }
+      for (const inst of pending) replayInstruction(map, inst, drawnCountRef);
     };
 
     if (map.isStyleLoaded()) apply();
     else map.once("load", apply);
   }, [instructions]);
 
-  return <div ref={containerRef} className="map-container" />;
+  return (
+    <div className="relative w-full h-full">
+      <div ref={containerRef} className="map-container" />
+      {pickerOpen && (
+        <div
+          data-basemap-picker
+          className="absolute bottom-20 right-3 z-30 bg-black/90 backdrop-blur rounded-lg overflow-hidden min-w-[140px] shadow-xl"
+        >
+          {BASEMAPS.map((bm, i) => {
+            const isActive = i === basemapIdx;
+            return (
+              <button
+                key={bm.url}
+                type="button"
+                onClick={() => {
+                  setBasemapIdx(i);
+                  setPickerOpen(false);
+                }}
+                className={`block w-full text-left text-xs py-2.5 px-4 border-b border-white/10 last:border-b-0 transition-colors ${
+                  isActive
+                    ? "bg-arc-red/25 text-white font-bold"
+                    : "text-white/70 font-normal hover:bg-white/5"
+                }`}
+              >
+                {bm.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      <button
+        data-basemap-picker
+        type="button"
+        onClick={() => setPickerOpen((v) => !v)}
+        title="Change basemap"
+        className="absolute bottom-8 right-3 z-20 w-9 h-9 rounded-lg bg-black/85 backdrop-blur flex items-center justify-center shadow-lg hover:bg-black/95 transition-colors"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          width="18"
+          height="18"
+          fill="none"
+          stroke="rgba(255,255,255,0.75)"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+          <path d="M2 17l10 5 10-5" />
+          <path d="M2 12l10 5 10-5" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+function replayInstruction(
+  map: MlMap,
+  inst: MapInstruction,
+  drawnCountRef?: React.MutableRefObject<number>,
+) {
+  if (inst.action === "clear") {
+    const toRemoveLayers: string[] = [];
+    map.getStyle().layers?.forEach((l) => {
+      if (l.id.startsWith("cascade-draw-")) toRemoveLayers.push(l.id);
+    });
+    toRemoveLayers.forEach((id) => {
+      if (map.getLayer(id)) map.removeLayer(id);
+    });
+    const sources = Object.keys(map.getStyle().sources || {}).filter((s) =>
+      s.startsWith("cascade-draw-"),
+    );
+    sources.forEach((s) => {
+      if (map.getSource(s)) map.removeSource(s);
+    });
+    if (drawnCountRef) drawnCountRef.current = 0;
+    return;
+  }
+
+  if (inst.action !== "draw" || !inst.geometry) return;
+
+  const countObj = drawnCountRef ?? { current: 0 };
+  const id = `cascade-draw-${countObj.current++}`;
+  // Dedup if this layer id already exists (e.g. replay collision).
+  if (map.getSource(id)) return;
+  const geom = inst.geometry as unknown as
+    | GeoJSON.Geometry
+    | GeoJSON.FeatureCollection;
+  const data: GeoJSON.FeatureCollection =
+    (geom as GeoJSON.FeatureCollection).type === "FeatureCollection"
+      ? (geom as GeoJSON.FeatureCollection)
+      : {
+          type: "FeatureCollection",
+          features: [
+            { type: "Feature", geometry: geom as GeoJSON.Geometry, properties: {} },
+          ],
+        };
+  map.addSource(id, { type: "geojson", data });
+  const color = inst.style?.color || "#ED1B2E";
+  const opacity = inst.style?.opacity ?? 0.35;
+  const firstSymbol = map
+    .getStyle()
+    .layers?.find(
+      (l) => l.type === "symbol" && l.id.startsWith("cascade-asset-"),
+    )?.id;
+  map.addLayer(
+    {
+      id: `${id}-fill`,
+      type: "fill",
+      source: id,
+      paint: { "fill-color": color, "fill-opacity": opacity },
+      filter: ["==", ["geometry-type"], "Polygon"],
+    },
+    firstSymbol,
+  );
+  map.addLayer(
+    {
+      id: `${id}-line`,
+      type: "line",
+      source: id,
+      paint: { "line-color": color, "line-width": 2, "line-opacity": 0.9 },
+      filter: ["in", ["geometry-type"], ["literal", ["Polygon", "LineString"]]],
+    },
+    firstSymbol,
+  );
+  map.addLayer({
+    id: `${id}-point`,
+    type: "circle",
+    source: id,
+    paint: {
+      "circle-color": color,
+      "circle-radius": 6,
+      "circle-stroke-width": 2,
+      "circle-stroke-color": "#fff",
+    },
+    filter: ["==", ["geometry-type"], "Point"],
+  });
 }

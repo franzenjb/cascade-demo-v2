@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function LayerPanel({ visibility, onChange }: Props) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
 
   const toggle = (k: AssetType) => {
     onChange({ ...visibility, [k]: !visibility[k] });
