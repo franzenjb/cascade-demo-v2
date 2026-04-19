@@ -6,6 +6,8 @@ import type { MapInstruction } from "@/lib/types";
 import assetsJson from "@/data/pinellas_assets.json";
 import { assetIconSVG } from "./AssetIcons";
 import type { DrillAsset } from "./DrillPanel";
+import type { RiskFilter, RiskMode } from "./RiskFilterPanel";
+import { buildTractPopupHTML, type TractPopupProps } from "@/lib/tract-popup";
 
 const BASEMAPS: { name: string; url: string }[] = [
   { name: "Light", url: "https://tiles.openfreemap.org/styles/positron" },
@@ -60,6 +62,79 @@ interface Props {
   focusTarget?: FocusTarget | null;
   assetVisibility?: AssetLayerVisibility;
   onAssetClick?: (asset: DrillAsset) => void;
+  riskFilter?: RiskFilter;
+  onTractsLoaded?: (tracts: TractPopupProps[]) => void;
+}
+
+type TractFC = GeoJSON.FeatureCollection<GeoJSON.Polygon | GeoJSON.MultiPolygon, TractPopupProps>;
+
+type PaintExpr = unknown;
+
+function paintForMode(
+  mode: RiskMode,
+  sviMin: number,
+  nriMin: number,
+): { color: PaintExpr; opacity: PaintExpr } {
+  if (mode === "off") {
+    return { color: "#000000", opacity: 0 };
+  }
+  if (mode === "nri") {
+    const v = ["coalesce", ["to-number", ["get", "nri_score"]], -1];
+    return {
+      color: [
+        "step",
+        v,
+        "#f5e8c6",
+        20,
+        "#e9c46a",
+        40,
+        "#e07a3c",
+        60,
+        "#c0392b",
+        80,
+        "#5b2b8c",
+      ],
+      opacity: ["case", ["<", v, 0], 0, ["<", v, nriMin], 0.05, 0.55],
+    };
+  }
+  if (mode === "combined") {
+    const v = ["coalesce", ["to-number", ["get", "combined_pct"]], -1];
+    const threshold = Math.max(sviMin, nriMin);
+    return {
+      color: [
+        "step",
+        v,
+        "#f3e6e6",
+        25,
+        "#e9b7b7",
+        50,
+        "#d97373",
+        75,
+        "#b51a2b",
+        90,
+        "#7a0f1d",
+      ],
+      opacity: ["case", ["<", v, 0], 0, ["<", v, threshold], 0.05, 0.55],
+    };
+  }
+  // svi
+  const v = ["*", ["coalesce", ["to-number", ["get", "svi_pct"]], -0.01], 100];
+  return {
+    color: [
+      "step",
+      v,
+      "#f3e6e6",
+      25,
+      "#e9b7b7",
+      50,
+      "#d97373",
+      75,
+      "#b51a2b",
+      90,
+      "#7a0f1d",
+    ],
+    opacity: ["case", ["<", v, 0], 0, ["<", v, sviMin], 0.05, 0.6],
+  };
 }
 
 export default function MapView({
@@ -70,6 +145,8 @@ export default function MapView({
   focusTarget,
   assetVisibility,
   onAssetClick,
+  riskFilter,
+  onTractsLoaded,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
@@ -77,13 +154,18 @@ export default function MapView({
   const appliedCountRef = useRef(0);
   const assetLayersInitRef = useRef(false);
   const initAssetLayersRef = useRef<(() => Promise<void>) | null>(null);
+  const tractsDataRef = useRef<TractFC | null>(null);
+  const tractLayerInitRef = useRef(false);
+  const initTractLayerRef = useRef<(() => void) | null>(null);
   const instructionsRef = useRef<MapInstruction[]>([]);
   const onAssetClickRef = useRef<typeof onAssetClick>(undefined);
+  const onTractsLoadedRef = useRef<typeof onTractsLoaded>(undefined);
   const [basemapIdx, setBasemapIdx] = useState(0);
   const [pickerOpen, setPickerOpen] = useState(false);
 
   instructionsRef.current = instructions;
   onAssetClickRef.current = onAssetClick;
+  onTractsLoadedRef.current = onTractsLoaded;
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -215,14 +297,103 @@ export default function MapView({
 
     initAssetLayersRef.current = initAssetLayers;
 
-    if (map.isStyleLoaded()) initAssetLayers();
-    else map.on("load", initAssetLayers);
+    const initTractLayer = () => {
+      if (tractLayerInitRef.current) return;
+      if (!tractsDataRef.current) return;
+      tractLayerInitRef.current = true;
+
+      const firstAssetSymbol = map
+        .getStyle()
+        .layers?.find(
+          (l) => l.type === "symbol" && l.id.startsWith("cascade-asset-"),
+        )?.id;
+
+      if (!map.getSource("cascade-tracts")) {
+        map.addSource("cascade-tracts", {
+          type: "geojson",
+          data: tractsDataRef.current,
+        });
+      }
+      if (!map.getLayer("cascade-tract-fill")) {
+        map.addLayer(
+          {
+            id: "cascade-tract-fill",
+            type: "fill",
+            source: "cascade-tracts",
+            paint: {
+              "fill-color": "#7a0f1d",
+              "fill-opacity": 0,
+            },
+          },
+          firstAssetSymbol,
+        );
+      }
+      if (!map.getLayer("cascade-tract-line")) {
+        map.addLayer(
+          {
+            id: "cascade-tract-line",
+            type: "line",
+            source: "cascade-tracts",
+            paint: {
+              "line-color": "#6b7280",
+              "line-width": 0.4,
+              "line-opacity": 0.5,
+            },
+          },
+          firstAssetSymbol,
+        );
+      }
+
+      map.on("click", "cascade-tract-fill", (e) => {
+        const f = e.features?.[0];
+        if (!f) return;
+        const p = f.properties as unknown as TractPopupProps;
+        if (!p || !p.geoid) return;
+        const html = buildTractPopupHTML(p);
+        new maplibregl.Popup({ closeOnClick: true, maxWidth: "360px" })
+          .setLngLat(e.lngLat)
+          .setHTML(html)
+          .addTo(map);
+      });
+      map.on("mouseenter", "cascade-tract-fill", () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+      map.on("mouseleave", "cascade-tract-fill", () => {
+        map.getCanvas().style.cursor = "";
+      });
+    };
+
+    initTractLayerRef.current = initTractLayer;
+
+    const bootstrap = async () => {
+      await initAssetLayers();
+      // Fetch tracts once; layer is gated on data arriving.
+      if (!tractsDataRef.current) {
+        try {
+          const res = await fetch("/api/tracts");
+          if (res.ok) {
+            const data = (await res.json()) as TractFC;
+            tractsDataRef.current = data;
+            const props = data.features.map((f) => f.properties);
+            onTractsLoadedRef.current?.(props);
+          }
+        } catch {
+          // non-fatal
+        }
+      }
+      initTractLayer();
+    };
+
+    if (map.isStyleLoaded()) bootstrap();
+    else map.on("load", bootstrap);
 
     return () => {
       map.remove();
       mapRef.current = null;
       assetLayersInitRef.current = false;
       initAssetLayersRef.current = null;
+      tractLayerInitRef.current = false;
+      initTractLayerRef.current = null;
     };
   }, [center, zoom]);
 
@@ -237,14 +408,54 @@ export default function MapView({
     map.setStyle(url);
     map.once("style.load", async () => {
       assetLayersInitRef.current = false;
+      tractLayerInitRef.current = false;
       drawnCountRef.current = 0;
       appliedCountRef.current = 0;
       await initAssetLayersRef.current?.();
+      initTractLayerRef.current?.();
       const pending = instructionsRef.current;
       appliedCountRef.current = pending.length;
       for (const inst of pending) replayInstruction(map, inst, drawnCountRef);
     });
   }, [basemapIdx]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !riskFilter) return;
+    const apply = () => {
+      if (!map.getLayer("cascade-tract-fill")) return;
+      const { color, opacity } = paintForMode(
+        riskFilter.mode,
+        riskFilter.sviMin,
+        riskFilter.nriMin,
+      );
+      map.setPaintProperty(
+        "cascade-tract-fill",
+        "fill-color",
+        color as never,
+      );
+      map.setPaintProperty(
+        "cascade-tract-fill",
+        "fill-opacity",
+        opacity as never,
+      );
+      map.setPaintProperty(
+        "cascade-tract-line",
+        "line-opacity",
+        riskFilter.mode === "off" ? 0.2 : 0.5,
+      );
+    };
+    if (map.isStyleLoaded() && map.getLayer("cascade-tract-fill")) apply();
+    else {
+      const handler = () => {
+        if (map.getLayer("cascade-tract-fill")) {
+          apply();
+          map.off("idle", handler);
+        }
+      };
+      map.on("idle", handler);
+    }
+  }, [riskFilter]);
 
   useEffect(() => {
     const map = mapRef.current;

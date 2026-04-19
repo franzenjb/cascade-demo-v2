@@ -80,3 +80,102 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: var(--arc-gray-500); }
   font-size: 16px !important;
   padding: 0 6px !important;
 }
+
+/* Tract popup — explicit dark-on-white, immune to html.dark */
+.tp {
+  width: 320px;
+  max-width: 340px;
+  font-family: var(--font-body);
+  color: #1f2937 !important;
+  line-height: 1.35;
+}
+.tp-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #7a0f1d 0%, #5b2b8c 100%);
+  color: #ffffff !important;
+  margin-bottom: 10px;
+}
+.tp-hero-place {
+  font-family: var(--font-headline);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.15;
+  color: #ffffff !important;
+}
+.tp-hero-tract {
+  font-family: var(--font-data);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.8) !important;
+  margin-top: 2px;
+}
+.tp-hero-score {
+  text-align: right;
+  line-height: 1;
+}
+.tp-hero-score-val {
+  font-family: var(--font-headline);
+  font-weight: 700;
+  font-size: 26px;
+  color: #ffffff !important;
+}
+.tp-hero-score-lbl {
+  font-family: var(--font-data);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.8) !important;
+  margin-top: 3px;
+}
+.tp-subhead {
+  font-family: var(--font-data);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #6b7280 !important;
+  margin: 8px 0 4px;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 3px;
+}
+.tp-kv {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  padding: 2px 0;
+  color: #1f2937 !important;
+}
+.tp-kv-key { color: #6b7280 !important; }
+.tp-kv-val { color: #111827 !important; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tp-bar-row { margin: 4px 0; }
+.tp-bar-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  margin-bottom: 2px;
+  color: #374151 !important;
+}
+.tp-bar-head-val { font-weight: 600; color: #111827 !important; font-variant-numeric: tabular-nums; }
+.tp-bar-track {
+  height: 6px;
+  background: #f3f4f6;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.tp-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 200ms ease;
+}
+.tp-caption {
+  font-size: 10px;
+  color: #6b7280 !important;
+  margin-top: 6px;
+  font-style: italic;
+}

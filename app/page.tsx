@@ -19,6 +19,10 @@ import {
   type AssetType,
   type FocusTarget,
 } from "@/components/MapView";
+import RiskFilterPanel, {
+  type RiskFilter,
+} from "@/components/RiskFilterPanel";
+import type { TractPopupProps } from "@/lib/tract-popup";
 import assetsJson from "@/data/pinellas_assets.json";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
@@ -149,6 +153,12 @@ export default function Page() {
   const [accordionResetSignal, setAccordionResetSignal] = useState(0);
   const [toolActivity, setToolActivity] = useState<string | null>(null);
   const [streamTick, setStreamTick] = useState(0);
+  const [riskFilter, setRiskFilter] = useState<RiskFilter>({
+    mode: "combined",
+    sviMin: 60,
+    nriMin: 60,
+  });
+  const [tracts, setTracts] = useState<TractPopupProps[]>([]);
 
   const footprintIdsByCategory = useMemo(() => {
     const g: Partial<Record<AssetType, Set<string>>> = {};
@@ -352,6 +362,32 @@ export default function Page() {
     setFocusTarget({ center: [a.lon, a.lat], zoom: 14 });
   };
 
+  const flyToTract = (nameOrGeoid: string) => {
+    const hit = tracts.find(
+      (t) => t.geoid === nameOrGeoid || t.name === nameOrGeoid,
+    );
+    if (!hit || !hit.centroid_lng || !hit.centroid_lat) return;
+    setFocusTarget({
+      center: [hit.centroid_lng as number, hit.centroid_lat as number],
+      zoom: 13,
+    });
+  };
+
+  const shortTractName = (raw: string) =>
+    raw.replace(/^Census Tract\s+/i, "");
+
+  const topTractPlace = useMemo(() => {
+    if (!metrics?.topTract) return null;
+    const shortName = shortTractName(metrics.topTract.name);
+    const hit = tracts.find(
+      (t) =>
+        t.geoid === metrics.topTract!.geoid ||
+        t.name === metrics.topTract!.name ||
+        t.name === shortName,
+    );
+    return hit?.place || null;
+  }, [metrics, tracts]);
+
   const handleAssetClick = (a: DrillAsset) => {
     const cat = a.type as AssetType;
     setActiveCategory(cat);
@@ -476,10 +512,19 @@ export default function Page() {
           />
           {metrics.topTract && (
             <Metric
-              label="Most vulnerable tract"
-              value={metrics.topTract.name}
-              sub={`SVI ${((metrics.topTract.rpl_themes ?? 0) * 100).toFixed(0)}%`}
+              label="Most vulnerable area"
+              value={
+                topTractPlace
+                  ? `${topTractPlace}`
+                  : `Tract ${shortTractName(metrics.topTract.name)}`
+              }
+              sub={
+                topTractPlace
+                  ? `Tract ${shortTractName(metrics.topTract.name)} · SVI ${((metrics.topTract.rpl_themes ?? 0) * 100).toFixed(0)}%`
+                  : `SVI ${((metrics.topTract.rpl_themes ?? 0) * 100).toFixed(0)}%`
+              }
               warn
+              onClick={() => flyToTract(metrics.topTract!.geoid || metrics.topTract!.name)}
             />
           )}
         </div>
@@ -568,7 +613,10 @@ export default function Page() {
             focusTarget={focusTarget}
             assetVisibility={assetVisibility}
             onAssetClick={handleAssetClick}
+            riskFilter={riskFilter}
+            onTractsLoaded={setTracts}
           />
+          <RiskFilterPanel value={riskFilter} onChange={setRiskFilter} />
           <LayerPanel
             visibility={assetVisibility}
             onChange={setAssetVisibility}
@@ -651,13 +699,19 @@ export default function Page() {
 
       {topTracts.length > 0 && rightTab === "drill" && activeCategory && (
         <div className="border-t border-arc-gray-100 dark:border-arc-gray-700 bg-arc-cream/60 dark:bg-arc-black/40 px-4 py-2 text-[10px] font-data uppercase tracking-wider text-arc-gray-500 dark:text-arc-gray-300">
-          Top vulnerable tracts:{" "}
+          Top vulnerable areas:{" "}
           {topTracts
             .slice(0, 3)
-            .map(
-              (t) =>
-                `${t.name} (${((t.rpl_themes ?? 0) * 100).toFixed(0)}%)`,
-            )
+            .map((t) => {
+              const short = shortTractName(t.name);
+              const place = tracts.find(
+                (x) => x.geoid === t.geoid || x.name === short,
+              )?.place;
+              const label = place
+                ? `${place} (Tract ${short})`
+                : `Tract ${short}`;
+              return `${label} · ${((t.rpl_themes ?? 0) * 100).toFixed(0)}%`;
+            })
             .join(" · ")}
         </div>
       )}
@@ -705,14 +759,16 @@ function Metric({
   value,
   sub,
   warn,
+  onClick,
 }: {
   label: string;
   value: string;
   sub?: string;
   warn?: boolean;
+  onClick?: () => void;
 }) {
-  return (
-    <div className="flex flex-col leading-tight min-w-[110px]">
+  const body = (
+    <>
       <span className="text-[9px] font-data uppercase tracking-widest text-arc-gray-500 dark:text-arc-gray-300">
         {label}
       </span>
@@ -728,8 +784,24 @@ function Metric({
           {sub}
         </span>
       )}
-    </div>
+    </>
   );
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="flex flex-col leading-tight min-w-[110px] text-left hover:bg-arc-cream/70 dark:hover:bg-arc-black/40 rounded px-1 -mx-1 transition-colors cursor-pointer group"
+        title="Click to zoom to this area"
+      >
+        {body}
+        <span className="text-[9px] text-arc-maroon/70 dark:text-arc-red/70 font-data opacity-0 group-hover:opacity-100 transition-opacity">
+          click to zoom →
+        </span>
+      </button>
+    );
+  }
+  return <div className="flex flex-col leading-tight min-w-[110px]">{body}</div>;
 }
 
 function Chip({
