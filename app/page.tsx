@@ -364,7 +364,7 @@ export default function Page() {
     setHighlightId(null);
     setDrillScope("footprint");
     setStreamTick(0);
-    setRightTab("conversation");
+    setRightTab("drill");
     setClearSignal((n) => n + 1);
     setFocusTarget({ center: payload.focusCenter, zoom: payload.focusZoom });
     setInstructions([
@@ -376,7 +376,6 @@ export default function Page() {
       },
     ]);
     setScenarioId(payload.scenarioId);
-    setTriggerDirective(payload.directive);
     setActiveWarning({
       nwsEventId: payload.nwsEventId,
       expires: payload.expires,
@@ -482,15 +481,13 @@ export default function Page() {
     setActiveCategory(cat);
     setRightTab("drill");
     setHighlightId(null);
-    const rows =
-      hasFootprint && drillScope === "footprint"
-        ? footprintByCategory[cat] ?? []
-        : FULL_BY_CATEGORY[cat] ?? [];
-    const assetB = boundsForRows(rows);
+    // Every chip returns the map to the same wide view as "All" — we just
+    // change the visibility filter. Keeps the tornado path in frame so the
+    // user can see where each asset type sits relative to the warning.
+    const assetB = boundsForRows(FULL_ASSETS);
     const warnB = boundsForInstructions(instructions);
-    // Show the assets plus the warning footprint so the user sees context.
     const b = unionBounds(assetB, warnB);
-    if (b) setFocusTarget({ bounds: b, padding: 80, maxZoom: 12 });
+    if (b) setFocusTarget({ bounds: b, padding: 80, maxZoom: 11 });
     setAssetVisibility(onlyThis(cat));
   };
 

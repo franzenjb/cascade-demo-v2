@@ -35,8 +35,8 @@
       "id": "rc_003",
       "type": "red_cross",
       "name": "Red Cross Volunteer Hub — Clearwater",
-      "lat": 27.9658,
-      "lon": -82.8001,
+      "lat": 27.9652,
+      "lon": -82.7878,
       "address": "1655 Gulf to Bay Blvd",
       "city": "Clearwater",
       "attrs": { "role": "volunteer_hub", "has_erv": false, "erv_count": 0, "shelter_capacity": 0, "operational_status": "open" }
@@ -247,8 +247,8 @@
       "id": "fire_003",
       "type": "fire_station",
       "name": "Clearwater Fire Station 45",
-      "lat": 27.9651,
-      "lon": -82.8085,
+      "lat": 27.9644,
+      "lon": -82.7910,
       "address": "1140 Court St",
       "city": "Clearwater",
       "attrs": { "agency": "Clearwater Fire & Rescue", "has_ladder": true, "staff_oncall": 12 }
@@ -318,8 +318,8 @@
       "id": "pol_002",
       "type": "police_station",
       "name": "Clearwater Police Department HQ",
-      "lat": 27.9623,
-      "lon": -82.8067,
+      "lat": 27.9611,
+      "lon": -82.7995,
       "address": "645 Pierce St",
       "city": "Clearwater",
       "attrs": { "agency": "Clearwater PD", "sworn_officers": 245 }
