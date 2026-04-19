@@ -32,16 +32,16 @@ export default function RiskFilterPanel({ value, onChange }: Props) {
       ? "Social Vulnerability Index"
       : value.mode === "nri"
       ? "FEMA National Risk Index"
-      : "Combined (avg of SVI + NRI)";
+      : "Combined — tract must pass both thresholds";
 
-  const minValue =
-    value.mode === "svi"
-      ? value.sviMin
+  const headerLabel =
+    value.mode === "off"
+      ? "off"
+      : value.mode === "svi"
+      ? `SVI ≥ ${value.sviMin}%`
       : value.mode === "nri"
-      ? value.nriMin
-      : value.mode === "combined"
-      ? Math.max(value.sviMin, value.nriMin)
-      : 0;
+      ? `NRI ≥ ${value.nriMin}`
+      : `SVI ≥ ${value.sviMin} · NRI ≥ ${value.nriMin}`;
 
   return (
     <div className="absolute top-[56px] left-3 z-20 bg-white/95 dark:bg-arc-gray-900/95 backdrop-blur rounded-md shadow-lg border border-arc-gray-300 dark:border-arc-gray-700 min-w-[260px] max-w-[320px]">
@@ -52,7 +52,7 @@ export default function RiskFilterPanel({ value, onChange }: Props) {
         <span className="inline-block w-2.5 h-2.5 rounded-full bg-arc-red" />
         <span className="flex-1">Tract Risk</span>
         <span className="text-[10px] font-normal text-arc-gray-500">
-          {value.mode === "off" ? "off" : `≥ ${minValue}%`}
+          {headerLabel}
         </span>
         <svg
           viewBox="0 0 12 12"

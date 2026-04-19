@@ -99,12 +99,33 @@ function paintForMode(
     };
   }
   if (mode === "combined") {
-    const v = ["coalesce", ["to-number", ["get", "combined_pct"]], -1];
-    const threshold = Math.max(sviMin, nriMin);
+    // Combined = tract must pass BOTH thresholds independently.
+    // Coloring still uses combined_pct so the darker tracts are those that
+    // are high on both axes. Missing data on an active axis → hide.
+    const c = ["coalesce", ["to-number", ["get", "combined_pct"]], -1];
+    const svi = [
+      "*",
+      ["coalesce", ["to-number", ["get", "svi_pct"]], -0.01],
+      100,
+    ];
+    const nri = ["coalesce", ["to-number", ["get", "nri_score"]], -1];
+    const opacity: unknown[] = ["case", ["<", c, 0], 0];
+    const fails: unknown[] = [];
+    if (sviMin > 0) {
+      opacity.push(["<", svi, 0], 0);
+      fails.push(["<", svi, sviMin]);
+    }
+    if (nriMin > 0) {
+      opacity.push(["<", nri, 0], 0);
+      fails.push(["<", nri, nriMin]);
+    }
+    if (fails.length === 1) opacity.push(fails[0], 0.05);
+    else if (fails.length > 1) opacity.push(["any", ...fails], 0.05);
+    opacity.push(0.55);
     return {
       color: [
         "step",
-        v,
+        c,
         "#f3e6e6",
         25,
         "#e9b7b7",
@@ -115,7 +136,7 @@ function paintForMode(
         90,
         "#7a0f1d",
       ],
-      opacity: ["case", ["<", v, 0], 0, ["<", v, threshold], 0.05, 0.55],
+      opacity,
     };
   }
   // svi
