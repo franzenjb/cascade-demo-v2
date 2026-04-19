@@ -6,7 +6,7 @@ import type { MapInstruction } from "@/lib/types";
 import assetsJson from "@/data/pinellas_assets.json";
 import { assetIconSVG } from "./AssetIcons";
 import type { DrillAsset } from "./DrillPanel";
-import type { RiskFilter, RiskMode } from "./RiskFilterPanel";
+import type { RiskFilter, RiskMode } from "./ControlPanel";
 import type { TractPopupProps } from "@/lib/tract-popup";
 
 const BASEMAPS: { name: string; url: string }[] = [

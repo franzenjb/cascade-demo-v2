@@ -9,7 +9,6 @@ import type {
 } from "@/lib/types";
 import ChatPanel from "@/components/ChatPanel";
 import TriggerButton from "@/components/TriggerButton";
-import LayerPanel from "@/components/LayerPanel";
 import DrillPanel, { type DrillAsset } from "@/components/DrillPanel";
 import AllAssetsAccordion from "@/components/AllAssetsAccordion";
 import TractPanel from "@/components/TractPanel";
@@ -20,9 +19,9 @@ import {
   type AssetType,
   type FocusTarget,
 } from "@/components/MapView";
-import RiskFilterPanel, {
+import ControlPanel, {
   type RiskFilter,
-} from "@/components/RiskFilterPanel";
+} from "@/components/ControlPanel";
 import type { TractPopupProps } from "@/lib/tract-popup";
 import assetsJson from "@/data/pinellas_assets.json";
 
@@ -734,10 +733,11 @@ export default function Page() {
             onTractsLoaded={setTracts}
             onTractClick={handleTractClick}
           />
-          <RiskFilterPanel value={riskFilter} onChange={setRiskFilter} />
-          <LayerPanel
+          <ControlPanel
+            risk={riskFilter}
+            onRiskChange={setRiskFilter}
             visibility={assetVisibility}
-            onChange={setAssetVisibility}
+            onVisibilityChange={setAssetVisibility}
           />
         </div>
         <div className="border-l border-arc-gray-100 dark:border-arc-gray-700 flex flex-col min-h-0 bg-white dark:bg-arc-gray-900">
