@@ -364,10 +364,10 @@ export default function Page() {
 
   const drillRows: DrillAsset[] = useMemo(() => {
     if (!activeCategory) return [];
-    if (drillScope === "footprint")
+    if (drillScope === "footprint" && totalFootprint > 0)
       return footprintByCategory[activeCategory] ?? [];
     return FULL_BY_CATEGORY[activeCategory] ?? [];
-  }, [activeCategory, drillScope, footprintByCategory]);
+  }, [activeCategory, drillScope, footprintByCategory, totalFootprint]);
 
   const drillEmpty =
     activeCategory && drillScope === "footprint"
