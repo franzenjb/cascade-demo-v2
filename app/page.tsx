@@ -229,6 +229,8 @@ export default function Page() {
     [footprintCounts],
   );
 
+  const hasFootprint = totalFootprint > 0;
+
   useEffect(() => {
     if (!activeWarning) {
       setCountdown(null);
@@ -398,10 +400,10 @@ export default function Page() {
 
   const drillRows: DrillAsset[] = useMemo(() => {
     if (!activeCategory) return [];
-    if (drillScope === "footprint" && totalFootprint > 0)
+    if (hasFootprint)
       return footprintByCategory[activeCategory] ?? [];
     return FULL_BY_CATEGORY[activeCategory] ?? [];
-  }, [activeCategory, drillScope, footprintByCategory, totalFootprint]);
+  }, [activeCategory, footprintByCategory, hasFootprint]);
 
   const drillEmpty =
     activeCategory && drillScope === "footprint"
@@ -459,9 +461,6 @@ export default function Page() {
     setHighlightId(a.id);
     setRightTab("drill");
     setFocusTarget({ center: [a.lon, a.lat], zoom: 14 });
-    // If we're in footprint mode but this pin isn't in the footprint, flip to "all"
-    const inFootprint = footprintIdsByCategory[cat]?.has(a.id) ?? false;
-    if (!inFootprint) setDrillScope("all");
   };
 
   const focusWholeView = () => {
@@ -505,8 +504,6 @@ export default function Page() {
   const printBriefing = () => {
     window.print();
   };
-
-  const hasFootprint = totalFootprint > 0;
 
   return (
     <main className="h-screen flex flex-col bg-arc-cream dark:bg-arc-black">
@@ -635,16 +632,15 @@ export default function Page() {
           active={activeCategory === null}
           onClick={handleAllChip}
           label="All"
-          count={totalFullAssets}
+          count={hasFootprint ? totalFootprint : totalFullAssets}
         />
         {ASSET_TYPES.map((t) => {
-          const count =
-            hasFootprint && drillScope === "footprint"
-              ? footprintCounts[t.key] ?? 0
-              : fullCounts[t.key] ?? 0;
+          const count = hasFootprint
+            ? footprintCounts[t.key] ?? 0
+            : fullCounts[t.key] ?? 0;
           if (count === 0) return null;
           const active = activeCategory === t.key;
-          const showFootprint = hasFootprint && drillScope === "footprint";
+          const showFootprint = hasFootprint;
           return (
             <button
               key={t.key}
@@ -676,31 +672,6 @@ export default function Page() {
             </button>
           );
         })}
-        {hasFootprint && activeCategory && (
-          <div className="ml-auto flex items-center gap-1 text-[10px] font-data uppercase tracking-wider">
-            <span className="text-arc-gray-500">Scope:</span>
-            <button
-              onClick={() => setDrillScope("footprint")}
-              className={`px-2 py-0.5 border ${
-                drillScope === "footprint"
-                  ? "bg-arc-red text-white border-arc-red"
-                  : "bg-white dark:bg-arc-gray-900 text-arc-gray-900 dark:text-arc-cream border-arc-gray-300 dark:border-arc-gray-700"
-              }`}
-            >
-              Footprint
-            </button>
-            <button
-              onClick={() => setDrillScope("all")}
-              className={`px-2 py-0.5 border ${
-                drillScope === "all"
-                  ? "bg-arc-maroon text-white border-arc-maroon"
-                  : "bg-white dark:bg-arc-gray-900 text-arc-gray-900 dark:text-arc-cream border-arc-gray-300 dark:border-arc-gray-700"
-              }`}
-            >
-              All
-            </button>
-          </div>
-        )}
       </div>
 
       {/* County baseline — static context, kept muted beneath the chips. */}
@@ -815,7 +786,7 @@ export default function Page() {
           )}
           {rightTab === "drill" && !activeCategory && (
             <AllAssetsAccordion
-              assetsByCategory={FULL_BY_CATEGORY}
+              assetsByCategory={hasFootprint ? footprintByCategory : FULL_BY_CATEGORY}
               footprintIdsByCategory={footprintIdsByCategory}
               onSelect={flyToAsset}
               highlightId={highlightId}
