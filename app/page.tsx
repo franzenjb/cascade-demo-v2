@@ -64,6 +64,26 @@ const FULL_BY_CATEGORY: Partial<Record<AssetType, DrillAsset[]>> = (() => {
   return g;
 })();
 
+/** Ray-casting point-in-polygon (works on the outer ring of a GeoJSON Polygon). */
+function pointInPolygon(
+  lng: number,
+  lat: number,
+  ring: number[][],
+): boolean {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xi = ring[i][0], yi = ring[i][1];
+    const xj = ring[j][0], yj = ring[j][1];
+    if (
+      yi > lat !== yj > lat &&
+      lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi
+    ) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
 type BBox = [[number, number], [number, number]];
 
 function boundsForInstructions(
@@ -322,7 +342,6 @@ export default function Page() {
   }) => {
     setMessages([]);
     setInstructions([]);
-    setFootprintByCategory({});
     setMetrics(null);
     setTopTracts([]);
     setActiveCategory(null);
@@ -346,6 +365,21 @@ export default function Page() {
       expires: payload.expires,
       scenarioId: payload.scenarioId,
     });
+
+    // Filter assets to those inside the warning polygon
+    const poly = payload.polygon as { type: string; coordinates: number[][][] };
+    const ring = poly?.coordinates?.[0];
+    if (ring) {
+      const inside = FULL_ASSETS.filter((a) => pointInPolygon(a.lon, a.lat, ring));
+      const grouped: Partial<Record<AssetType, DrillAsset[]>> = {};
+      for (const a of inside) {
+        const k = a.type as AssetType;
+        (grouped[k] ||= []).push(a);
+      }
+      setFootprintByCategory(grouped);
+    } else {
+      setFootprintByCategory({});
+    }
   };
 
   const totalFullAssets = FULL_ASSETS.length;
