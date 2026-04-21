@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   ChatMessage,
   GeoJSONPolygon,
@@ -202,6 +202,7 @@ export default function Page() {
   const [selectedTract, setSelectedTract] = useState<TractPopupProps | null>(
     null,
   );
+  const expiryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const footprintIdsByCategory = useMemo(() => {
     const g: Partial<Record<AssetType, Set<string>>> = {};
@@ -235,12 +236,22 @@ export default function Page() {
   useEffect(() => {
     if (!activeWarning) {
       setCountdown(null);
+      if (expiryTimerRef.current) {
+        clearTimeout(expiryTimerRef.current);
+        expiryTimerRef.current = null;
+      }
       return;
     }
     const tick = () => {
       const diffMs = new Date(activeWarning.expires).getTime() - Date.now();
       if (diffMs <= 0) {
         setCountdown("EXPIRED");
+        if (!expiryTimerRef.current) {
+          expiryTimerRef.current = setTimeout(() => {
+            setActiveWarning(null);
+            expiryTimerRef.current = null;
+          }, 5000);
+        }
         return;
       }
       const m = Math.floor(diffMs / 60000);
@@ -347,6 +358,7 @@ export default function Page() {
     setInstructions([]);
     setMetrics(null);
     setTopTracts([]);
+    setSelectedTract(null);
     setActiveCategory(null);
     setHighlightId(null);
     setDrillScope("footprint");
@@ -388,14 +400,6 @@ export default function Page() {
   };
 
   const totalFullAssets = FULL_ASSETS.length;
-
-  useEffect(() => {
-    if (streamTick === 0) return;
-    if (totalFootprint > 0 && rightTab === "conversation") {
-      setRightTab("drill");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [streamTick]);
 
   const activeCategoryLabel = activeCategory
     ? ASSET_TYPES.find((t) => t.key === activeCategory)?.label || "Assets"
