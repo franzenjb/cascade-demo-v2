@@ -770,7 +770,7 @@ export default function Page() {
               setStreaming={setStreaming}
               triggerDirective={triggerDirective}
               scenarioId={scenarioId}
-              onTriggerConsumed={() => setTriggerDirective(null)}
+              onTriggerConsumed={() => {}}
               toolActivity={toolActivity}
             />
           )}
