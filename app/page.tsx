@@ -361,6 +361,7 @@ export default function Page() {
         layer_label: "Tornado Warning",
       },
     ]);
+    setTriggerDirective(payload.directive);
     setScenarioId(payload.scenarioId);
     setActiveWarning({
       nwsEventId: payload.nwsEventId,
