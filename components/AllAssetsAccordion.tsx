@@ -88,15 +88,17 @@ export default function AllAssetsAccordion({
                   {footprintCount} in footprint
                 </span>
               )}
-              <span
-                className={`text-[11px] font-data px-1.5 py-0.5 ${
-                  rows.length > 0
-                    ? "bg-arc-black text-white dark:bg-arc-cream dark:text-arc-black"
-                    : "bg-arc-cream dark:bg-arc-black text-arc-gray-500 dark:text-arc-gray-300"
-                }`}
-              >
-                {rows.length}
-              </span>
+              {footprintCount === 0 && (
+                <span
+                  className={`text-[11px] font-data px-1.5 py-0.5 ${
+                    rows.length > 0
+                      ? "bg-arc-black text-white dark:bg-arc-cream dark:text-arc-black"
+                      : "bg-arc-cream dark:bg-arc-black text-arc-gray-500 dark:text-arc-gray-300"
+                  }`}
+                >
+                  {rows.length}
+                </span>
+              )}
               <svg
                 className={`w-3 h-3 text-arc-gray-500 dark:text-arc-gray-300 transition-transform ${
                   isOpen ? "rotate-90" : ""
@@ -167,7 +169,7 @@ export default function AllAssetsAccordion({
 }
 
 function defaults(): Record<AssetType, boolean> {
-  return Object.fromEntries(ASSET_TYPES.map((t) => [t.key, true])) as Record<
+  return Object.fromEntries(ASSET_TYPES.map((t) => [t.key, false])) as Record<
     AssetType,
     boolean
   >;
