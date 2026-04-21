@@ -47,6 +47,41 @@ html.dark, html.dark body {
 
 .red-rule { width: 40px; height: 3px; background: var(--arc-red); }
 
+/* Chat markdown tables — clean, compact, dark-mode aware */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.4;
+  margin: 8px 0;
+}
+.prose thead th {
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 2px solid var(--arc-gray-300);
+  white-space: nowrap;
+}
+.prose tbody td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--arc-gray-100);
+  vertical-align: top;
+}
+.prose tbody tr:last-child td {
+  border-bottom: none;
+}
+html.dark .prose thead th {
+  border-bottom-color: var(--arc-gray-700);
+}
+html.dark .prose tbody td {
+  border-bottom-color: var(--arc-gray-700);
+}
+
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--arc-cream); }
 ::-webkit-scrollbar-thumb { background: var(--arc-gray-300); border-radius: 3px; }
@@ -178,4 +213,32 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: var(--arc-gray-500); }
   color: #6b7280 !important;
   margin-top: 6px;
   font-style: italic;
+}
+
+/* Toast slide-in animation */
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(100%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-slide-in {
+  animation: slide-in 200ms ease-out;
+}
+
+/* Print stylesheet */
+@media print {
+  header, .chip-bar, .map-area, .tab-bar, .chat-input-area,
+  .no-print { display: none !important; }
+  body, html { background: white !important; color: black !important; height: auto !important; }
+  main { height: auto !important; display: block !important; }
+  .print-only { display: block !important; }
+  .right-panel {
+    border: none !important;
+    width: 100% !important;
+    max-width: 7in;
+    margin: 0 auto;
+  }
+  .prose { font-size: 12pt; color: black !important; }
+  .prose * { color: black !important; }
+  .hero-card { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  * { box-shadow: none !important; }
 }

@@ -20,6 +20,7 @@ interface Props {
   /** One-shot flag: fires the auto-briefing once, then parent clears it */
   pendingBriefing?: boolean;
   onBriefingSent?: () => void;
+  onStreamError?: (msg: string) => void;
   toolActivity?: string | null;
 }
 
@@ -37,6 +38,7 @@ export default function ChatPanel({
   scenarioId,
   pendingBriefing,
   onBriefingSent,
+  onStreamError,
   toolActivity,
 }: Props) {
   const [input, setInput] = useState("");
@@ -93,7 +95,11 @@ export default function ChatPanel({
                 // non-JSON tool result — skip structured forward
               }
             } else if (evt.type === "error") {
-              onAssistantDelta(`\n\n[Error: ${evt.error}]`);
+              if (onStreamError) {
+                onStreamError(evt.error ?? "Unknown error");
+              } else {
+                onAssistantDelta(`\n\n[Error: ${evt.error}]`);
+              }
             }
           } catch {
             // skip malformed line
@@ -102,7 +108,11 @@ export default function ChatPanel({
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      onAssistantDelta(`\n\n[Network error: ${msg}]`);
+      if (onStreamError) {
+        onStreamError(msg);
+      } else {
+        onAssistantDelta(`\n\n[Network error: ${msg}]`);
+      }
     } finally {
       setStreaming(false);
       onTurnEnd();

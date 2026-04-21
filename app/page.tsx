@@ -22,6 +22,8 @@ import {
 import { type RiskFilter } from "@/components/ControlPanel";
 import RiskPanel from "@/components/RiskPanel";
 import LayersPanel from "@/components/LayersPanel";
+import ToastContainer from "@/components/Toast";
+import { ToastProvider, useToast } from "@/lib/use-toast";
 import type { TractPopupProps } from "@/lib/tract-popup";
 import assetsJson from "@/data/pinellas_assets.json";
 
@@ -168,6 +170,16 @@ type RightTab = "conversation" | "drill" | "tract" | "layers" | "risk";
 type DrillScope = "footprint" | "all";
 
 export default function Page() {
+  return (
+    <ToastProvider>
+      <PageContent />
+      <ToastContainer />
+    </ToastProvider>
+  );
+}
+
+function PageContent() {
+  const { toast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [instructions, setInstructions] = useState<MapInstruction[]>([]);
   const [streaming, setStreaming] = useState(false);
@@ -500,11 +512,15 @@ export default function Page() {
     const last = [...messages]
       .reverse()
       .find((m) => m.role === "assistant" && m.content.trim());
-    if (!last) return;
+    if (!last) {
+      toast("No briefing to copy", "error");
+      return;
+    }
     try {
       await navigator.clipboard.writeText(last.content);
+      toast("Briefing copied to clipboard", "success");
     } catch {
-      // ignore
+      toast("Copy failed — try selecting the text manually", "error");
     }
   };
 
@@ -515,7 +531,7 @@ export default function Page() {
   return (
     <main className="h-screen flex flex-col bg-arc-cream dark:bg-arc-black">
       {/* Top bar — identity + alert status + simulate. No numeric tiles. */}
-      <header className="bg-arc-maroon text-white shadow-md">
+      <header className="bg-arc-maroon text-white shadow-md no-print">
         <div className="px-4 py-2 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             <div className="h-8 w-1 bg-arc-red" aria-hidden />
@@ -554,7 +570,7 @@ export default function Page() {
       {/* Hero impact card — one dominant number + actionable worst-area CTA.
           Resting state when no warning. */}
       {activeWarning && metrics ? (
-        <div className="border-b border-arc-gray-100 dark:border-arc-gray-700 bg-white dark:bg-arc-gray-900 px-6 py-4">
+        <div className="hero-card border-b border-arc-gray-100 dark:border-arc-gray-700 bg-white dark:bg-arc-gray-900 px-6 py-4">
           <div className="flex items-end justify-between gap-6 flex-wrap">
             <div className="min-w-[220px]">
               <div className="text-[10px] font-data uppercase tracking-widest text-arc-gray-500 dark:text-arc-gray-300 mb-1">
@@ -616,7 +632,7 @@ export default function Page() {
           </div>
         </div>
       ) : (
-        <div className="border-b border-arc-gray-100 dark:border-arc-gray-700 bg-white dark:bg-arc-gray-900 px-6 py-5">
+        <div className="no-print border-b border-arc-gray-100 dark:border-arc-gray-700 bg-white dark:bg-arc-gray-900 px-6 py-5">
           <div className="text-[10px] font-data uppercase tracking-widest text-arc-gray-500 dark:text-arc-gray-300 mb-1">
             Resting state
           </div>
@@ -634,7 +650,7 @@ export default function Page() {
         </div>
       )}
 
-      <div className="border-b border-arc-gray-100 dark:border-arc-gray-700 bg-arc-cream/60 dark:bg-arc-black/40 px-4 py-2 flex gap-2 overflow-x-auto items-center">
+      <div className="chip-bar border-b border-arc-gray-100 dark:border-arc-gray-700 bg-arc-cream/60 dark:bg-arc-black/40 px-4 py-2 flex gap-2 overflow-x-auto items-center">
         <Chip
           active={activeCategory === null}
           onClick={handleAllChip}
@@ -682,7 +698,7 @@ export default function Page() {
       </div>
 
       {/* County baseline — static context, kept muted beneath the chips. */}
-      <div className="border-b border-arc-gray-100 dark:border-arc-gray-700 bg-arc-cream/40 dark:bg-arc-black/30 px-4 py-1 text-[10px] font-data uppercase tracking-widest text-arc-gray-500 dark:text-arc-gray-300 flex gap-4 overflow-x-auto whitespace-nowrap">
+      <div className="no-print border-b border-arc-gray-100 dark:border-arc-gray-700 bg-arc-cream/40 dark:bg-arc-black/30 px-4 py-1 text-[10px] font-data uppercase tracking-widest text-arc-gray-500 dark:text-arc-gray-300 flex gap-4 overflow-x-auto whitespace-nowrap">
         <span>
           <span className="tabular-nums">959,107</span> pop
         </span>
@@ -698,7 +714,7 @@ export default function Page() {
       </div>
 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-[2fr_1fr] min-h-0">
-        <div className="min-h-[50vh] lg:min-h-0 relative">
+        <div className="map-area min-h-[50vh] lg:min-h-0 relative">
           <MapView
             center={CENTER}
             zoom={ZOOM}
@@ -712,8 +728,8 @@ export default function Page() {
             onTractClick={handleTractClick}
           />
         </div>
-        <div className="border-l border-arc-gray-100 dark:border-arc-gray-700 flex flex-col min-h-0 bg-white dark:bg-arc-gray-900">
-          <div className="flex items-center border-b border-arc-gray-100 dark:border-arc-gray-700">
+        <div className="right-panel border-l border-arc-gray-100 dark:border-arc-gray-700 flex flex-col min-h-0 bg-white dark:bg-arc-gray-900">
+          <div className="tab-bar flex items-center border-b border-arc-gray-100 dark:border-arc-gray-700">
             <TabButton
               active={rightTab === "conversation"}
               onClick={() => setRightTab("conversation")}
@@ -784,6 +800,7 @@ export default function Page() {
               scenarioId={scenarioId}
               pendingBriefing={pendingBriefing}
               onBriefingSent={() => setPendingBriefing(false)}
+              onStreamError={(msg) => toast(msg, "error")}
               toolActivity={toolActivity}
             />
           )}
