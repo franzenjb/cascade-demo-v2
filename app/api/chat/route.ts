@@ -38,6 +38,15 @@ export async function POST(req: NextRequest) {
     });
   }
 
+  // Truncate history to avoid token overflow: keep the first message
+  // (trigger briefing context) and the most recent exchanges.
+  const MAX_HISTORY = 20;
+  const history = body.history || [];
+  const trimmedHistory =
+    history.length > MAX_HISTORY
+      ? [history[0], ...history.slice(-(MAX_HISTORY - 1))]
+      : history;
+
   // When a trigger fires (NWS warning, scenario replay, etc.), the frontend
   // sends the generated [SYSTEM EVENT] directive as `trigger_directive`.
   // Prepend it to the user message so Claude's tool-use loop sees it first.
@@ -53,7 +62,7 @@ export async function POST(req: NextRequest) {
       };
 
       try {
-        for await (const event of chatWithTools(body.history || [], userMessage)) {
+        for await (const event of chatWithTools(trimmedHistory, userMessage)) {
           emit(event);
         }
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));

@@ -77,8 +77,11 @@ export default function TriggerButton({ onFired }: TriggerButtonProps) {
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 dark:bg-black/70 px-4"
           onClick={() => setShowIntro(false)}
+          onKeyDown={(e) => e.key === "Escape" && setShowIntro(false)}
           role="dialog"
           aria-modal="true"
+          tabIndex={-1}
+          ref={(el) => el?.focus()}
         >
           <div
             className="bg-white dark:bg-arc-gray-900 border-2 border-arc-red max-w-lg w-full p-6 shadow-xl"
