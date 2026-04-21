@@ -82,7 +82,7 @@ export default function AllAssetsAccordion({
               </span>
               {footprintCount > 0 && (
                 <span
-                  className="text-[10px] font-data uppercase tracking-wider px-1.5 py-0.5 bg-arc-red text-white"
+                  className="text-[10px] font-data uppercase tracking-wider px-1.5 py-0.5 border border-amber-500/60 text-amber-400 rounded"
                   title="In current warning footprint"
                 >
                   {footprintCount} in footprint
@@ -143,7 +143,7 @@ export default function AllAssetsAccordion({
                               {a.name || "Unnamed"}
                             </div>
                             {inFootprint && (
-                              <span className="text-[9px] font-data uppercase tracking-wider px-1.5 py-0.5 bg-arc-red text-white flex-shrink-0">
+                              <span className="text-[9px] font-data uppercase tracking-wider px-1.5 py-0.5 border border-amber-500/40 text-amber-400/80 rounded flex-shrink-0">
                                 In footprint
                               </span>
                             )}
