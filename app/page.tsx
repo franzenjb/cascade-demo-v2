@@ -173,6 +173,7 @@ export default function Page() {
   const [streaming, setStreaming] = useState(false);
   const [triggerDirective, setTriggerDirective] = useState<string | null>(null);
   const [scenarioId, setScenarioId] = useState<string | null>(null);
+  const [pendingBriefing, setPendingBriefing] = useState(false);
   const [clearSignal, setClearSignal] = useState(0);
   const [focusTarget, setFocusTarget] = useState<FocusTarget | null>(null);
   const [assetVisibility, setAssetVisibility] =
@@ -362,6 +363,7 @@ export default function Page() {
       },
     ]);
     setTriggerDirective(payload.directive);
+    setPendingBriefing(true);
     setScenarioId(payload.scenarioId);
     setActiveWarning({
       nwsEventId: payload.nwsEventId,
@@ -771,7 +773,8 @@ export default function Page() {
               setStreaming={setStreaming}
               triggerDirective={triggerDirective}
               scenarioId={scenarioId}
-              onTriggerConsumed={() => {}}
+              pendingBriefing={pendingBriefing}
+              onBriefingSent={() => setPendingBriefing(false)}
               toolActivity={toolActivity}
             />
           )}

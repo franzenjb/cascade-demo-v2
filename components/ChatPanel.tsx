@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import type { ChatMessage, MapInstruction } from "@/lib/types";
 
@@ -14,9 +14,12 @@ interface Props {
   onToolResult?: (name: string, parsed: Record<string, unknown>) => void;
   streaming: boolean;
   setStreaming: (v: boolean) => void;
+  /** Persistent warning context — sent with every user message while active */
   triggerDirective?: string | null;
   scenarioId?: string | null;
-  onTriggerConsumed?: () => void;
+  /** One-shot flag: fires the auto-briefing once, then parent clears it */
+  pendingBriefing?: boolean;
+  onBriefingSent?: () => void;
   toolActivity?: string | null;
 }
 
@@ -32,11 +35,11 @@ export default function ChatPanel({
   setStreaming,
   triggerDirective,
   scenarioId,
-  onTriggerConsumed,
+  pendingBriefing,
+  onBriefingSent,
   toolActivity,
 }: Props) {
   const [input, setInput] = useState("");
-  const consumedRef = useRef<string | null>(null);
 
   const runRequest = async (
     text: string,
@@ -114,19 +117,15 @@ export default function ChatPanel({
   };
 
   useEffect(() => {
-    if (!triggerDirective) return;
-    if (streaming) return;
-    if (consumedRef.current === triggerDirective) return;
-    consumedRef.current = triggerDirective;
-    const sid = scenarioId ?? null;
+    if (!pendingBriefing || !triggerDirective || streaming) return;
+    onBriefingSent?.();
     runRequest(
       "Produce the proactive situational briefing.",
       triggerDirective,
-      sid,
+      scenarioId ?? null,
     );
-    onTriggerConsumed?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [triggerDirective, streaming]);
+  }, [pendingBriefing]);
 
   return (
     <div className="flex flex-col h-full">
