@@ -19,9 +19,9 @@ import {
   type AssetType,
   type FocusTarget,
 } from "@/components/MapView";
-import ControlPanel, {
-  type RiskFilter,
-} from "@/components/ControlPanel";
+import { type RiskFilter } from "@/components/ControlPanel";
+import RiskPanel from "@/components/RiskPanel";
+import LayersPanel from "@/components/LayersPanel";
 import type { TractPopupProps } from "@/lib/tract-popup";
 import assetsJson from "@/data/pinellas_assets.json";
 
@@ -164,7 +164,7 @@ interface SituationMetrics {
   aliceStruggling: number | null;
 }
 
-type RightTab = "conversation" | "drill" | "tract";
+type RightTab = "conversation" | "drill" | "tract" | "layers" | "risk";
 type DrillScope = "footprint" | "all";
 
 export default function Page() {
@@ -707,12 +707,6 @@ export default function Page() {
             onTractsLoaded={setTracts}
             onTractClick={handleTractClick}
           />
-          <ControlPanel
-            risk={riskFilter}
-            onRiskChange={setRiskFilter}
-            visibility={assetVisibility}
-            onVisibilityChange={setAssetVisibility}
-          />
         </div>
         <div className="border-l border-arc-gray-100 dark:border-arc-gray-700 flex flex-col min-h-0 bg-white dark:bg-arc-gray-900">
           <div className="flex items-center border-b border-arc-gray-100 dark:border-arc-gray-700">
@@ -737,6 +731,17 @@ export default function Page() {
                   : "Tract"
               }
               count={selectedTract ? 1 : 0}
+            />
+            <TabButton
+              active={rightTab === "risk"}
+              onClick={() => setRightTab("risk")}
+              label="Risk"
+            />
+            <TabButton
+              active={rightTab === "layers"}
+              onClick={() => setRightTab("layers")}
+              label="Layers"
+              count={Object.values(assetVisibility).filter(Boolean).length}
             />
             <div className="ml-auto pr-2 flex gap-1">
               {streamTick > 0 && (
@@ -798,6 +803,15 @@ export default function Page() {
             />
           )}
           {rightTab === "tract" && <TractPanel tract={selectedTract} />}
+          {rightTab === "risk" && (
+            <RiskPanel risk={riskFilter} onRiskChange={setRiskFilter} />
+          )}
+          {rightTab === "layers" && (
+            <LayersPanel
+              visibility={assetVisibility}
+              onVisibilityChange={setAssetVisibility}
+            />
+          )}
         </div>
       </div>
 
@@ -889,7 +903,7 @@ function TabButton({
   active: boolean;
   onClick: () => void;
   label: string;
-  count: number;
+  count?: number;
   disabled?: boolean;
 }) {
   return (
@@ -905,7 +919,7 @@ function TabButton({
       }`}
     >
       <span>{label}</span>
-      {count > 0 && (
+      {(count ?? 0) > 0 && (
         <span
           className={`text-[10px] font-semibold px-1.5 rounded ${
             active
