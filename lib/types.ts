@@ -76,6 +76,14 @@ export interface ChatMessage {
   content: string;
 }
 
+export type RiskMode = "off" | "svi" | "nri" | "combined";
+
+export interface RiskFilter {
+  mode: RiskMode;
+  sviMin: number;
+  nriMin: number;
+}
+
 export interface MapInstruction {
   action: "draw" | "clear" | "zoom_to" | "highlight";
   geometry?: GeoJSONGeometry;

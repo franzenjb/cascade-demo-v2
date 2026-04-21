@@ -11,7 +11,7 @@ import ChatPanel from "@/components/ChatPanel";
 import TriggerButton from "@/components/TriggerButton";
 import DrillPanel, { type DrillAsset } from "@/components/DrillPanel";
 import AllAssetsAccordion from "@/components/AllAssetsAccordion";
-import TractPanel from "@/components/TractPanel";
+import DetailsPanel from "@/components/DetailsPanel";
 import { AssetIcon } from "@/components/AssetIcons";
 import {
   ASSET_TYPES,
@@ -19,9 +19,7 @@ import {
   type AssetType,
   type FocusTarget,
 } from "@/components/MapView";
-import { type RiskFilter } from "@/components/ControlPanel";
-import RiskPanel from "@/components/RiskPanel";
-import LayersPanel from "@/components/LayersPanel";
+import type { RiskFilter } from "@/lib/types";
 import ToastContainer from "@/components/Toast";
 import { ToastProvider, useToast } from "@/lib/use-toast";
 import type { TractPopupProps } from "@/lib/tract-popup";
@@ -166,7 +164,7 @@ interface SituationMetrics {
   aliceStruggling: number | null;
 }
 
-type RightTab = "conversation" | "drill" | "tract" | "layers" | "risk";
+type RightTab = "briefing" | "assets" | "details";
 type DrillScope = "footprint" | "all";
 
 export default function Page() {
@@ -198,7 +196,7 @@ function PageContent() {
   >({});
   const [metrics, setMetrics] = useState<SituationMetrics | null>(null);
   const [topTracts, setTopTracts] = useState<TractHit[]>([]);
-  const [rightTab, setRightTab] = useState<RightTab>("conversation");
+  const [rightTab, setRightTab] = useState<RightTab>("briefing");
   const [activeCategory, setActiveCategory] = useState<AssetType | null>(null);
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const [drillScope, setDrillScope] = useState<DrillScope>("all");
@@ -375,7 +373,7 @@ function PageContent() {
     setHighlightId(null);
     setDrillScope("footprint");
     setStreamTick(0);
-    setRightTab("drill");
+    setRightTab("assets");
     setClearSignal((n) => n + 1);
     setFocusTarget({ center: payload.focusCenter, zoom: payload.focusZoom });
     setInstructions([
@@ -440,7 +438,7 @@ function PageContent() {
 
   const handleTractClick = (t: TractPopupProps) => {
     setSelectedTract(t);
-    setRightTab("tract");
+    setRightTab("details");
     if (t.centroid_lng && t.centroid_lat) {
       setFocusTarget({
         center: [t.centroid_lng, t.centroid_lat],
@@ -478,7 +476,7 @@ function PageContent() {
     const cat = a.type as AssetType;
     setActiveCategory(cat);
     setHighlightId(a.id);
-    setRightTab("drill");
+    setRightTab("assets");
     setFocusTarget({ center: [a.lon, a.lat], zoom: 14 });
   };
 
@@ -494,7 +492,7 @@ function PageContent() {
   const handleAllChip = () => {
     setActiveCategory(null);
     setHighlightId(null);
-    setRightTab("drill");
+    setRightTab("assets");
     setAccordionResetSignal((n) => n + 1);
     focusWholeView();
     setAssetVisibility(allOn());
@@ -502,7 +500,7 @@ function PageContent() {
 
   const handleTypeChip = (cat: AssetType) => {
     setActiveCategory(cat);
-    setRightTab("drill");
+    setRightTab("assets");
     setHighlightId(null);
     focusWholeView();
     setAssetVisibility(onlyThis(cat));
@@ -731,37 +729,21 @@ function PageContent() {
         <div className="right-panel border-l border-arc-gray-100 dark:border-arc-gray-700 flex flex-col min-h-0 bg-white dark:bg-arc-gray-900">
           <div className="tab-bar flex items-center border-b border-arc-gray-100 dark:border-arc-gray-700">
             <TabButton
-              active={rightTab === "conversation"}
-              onClick={() => setRightTab("conversation")}
-              label="Conversation"
+              active={rightTab === "briefing"}
+              onClick={() => setRightTab("briefing")}
+              label="Briefing"
               count={messages.filter((m) => m.role === "assistant").length}
             />
             <TabButton
-              active={rightTab === "drill"}
-              onClick={() => setRightTab("drill")}
-              label={activeCategoryLabel}
+              active={rightTab === "assets"}
+              onClick={() => setRightTab("assets")}
+              label="Assets"
               count={assetTabCount}
             />
             <TabButton
-              active={rightTab === "tract"}
-              onClick={() => setRightTab("tract")}
-              label={
-                selectedTract
-                  ? selectedTract.place || `Tract ${selectedTract.name}`
-                  : "Tract"
-              }
-              count={selectedTract ? 1 : 0}
-            />
-            <TabButton
-              active={rightTab === "risk"}
-              onClick={() => setRightTab("risk")}
-              label="Risk"
-            />
-            <TabButton
-              active={rightTab === "layers"}
-              onClick={() => setRightTab("layers")}
-              label="Layers"
-              count={Object.values(assetVisibility).filter(Boolean).length}
+              active={rightTab === "details"}
+              onClick={() => setRightTab("details")}
+              label="Details"
             />
             <div className="ml-auto pr-2 flex gap-1">
               {streamTick > 0 && (
@@ -785,7 +767,7 @@ function PageContent() {
             </div>
           </div>
 
-          {rightTab === "conversation" && (
+          {rightTab === "briefing" && (
             <ChatPanel
               messages={messages}
               onUserMessage={onUserMessage}
@@ -805,7 +787,7 @@ function PageContent() {
             />
           )}
 
-          {rightTab === "drill" && activeCategory && (
+          {rightTab === "assets" && activeCategory && (
             <DrillPanel
               category={activeCategory}
               assets={drillRows}
@@ -814,7 +796,7 @@ function PageContent() {
               emptyLabel={drillEmpty}
             />
           )}
-          {rightTab === "drill" && !activeCategory && (
+          {rightTab === "assets" && !activeCategory && (
             <AllAssetsAccordion
               assetsByCategory={hasFootprint ? footprintByCategory : FULL_BY_CATEGORY}
               footprintIdsByCategory={footprintIdsByCategory}
@@ -823,12 +805,11 @@ function PageContent() {
               resetSignal={accordionResetSignal}
             />
           )}
-          {rightTab === "tract" && <TractPanel tract={selectedTract} />}
-          {rightTab === "risk" && (
-            <RiskPanel risk={riskFilter} onRiskChange={setRiskFilter} />
-          )}
-          {rightTab === "layers" && (
-            <LayersPanel
+          {rightTab === "details" && (
+            <DetailsPanel
+              selectedTract={selectedTract}
+              risk={riskFilter}
+              onRiskChange={setRiskFilter}
               visibility={assetVisibility}
               onVisibilityChange={setAssetVisibility}
             />
@@ -836,7 +817,7 @@ function PageContent() {
         </div>
       </div>
 
-      {topTracts.length > 0 && rightTab === "drill" && activeCategory && (
+      {topTracts.length > 0 && rightTab === "assets" && activeCategory && (
         <div className="border-t border-arc-gray-100 dark:border-arc-gray-700 bg-arc-cream/60 dark:bg-arc-black/40 px-4 py-2 text-[10px] font-data uppercase tracking-wider text-arc-gray-500 dark:text-arc-gray-300">
           Top vulnerable areas:{" "}
           {topTracts

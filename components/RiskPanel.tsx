@@ -1,6 +1,6 @@
 "use client";
 
-import type { RiskFilter, RiskMode } from "./ControlPanel";
+import type { RiskFilter, RiskMode } from "@/lib/types";
 
 interface Props {
   risk: RiskFilter;
