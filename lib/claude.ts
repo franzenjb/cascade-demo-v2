@@ -1,7 +1,7 @@
 /**
  * Claude API wrapper with tool-use support.
  *
- * Ported from cascade-demo with MapLibre/Supabase tool set. Streams tokens
+ * Ported from cascade1 with MapLibre/Supabase tool set. Streams tokens
  * via an async generator; callers flush to the frontend as SSE.
  */
 

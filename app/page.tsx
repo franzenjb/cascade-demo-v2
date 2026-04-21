@@ -824,10 +824,10 @@ export default function Page() {
         <span>
           Sibling of{" "}
           <a
-            href="https://github.com/franzenjb/cascade-demo"
+            href="https://github.com/franzenjb/cascade1"
             className="underline hover:text-arc-maroon"
           >
-            cascade-demo
+            cascade1
           </a>{" "}
           &amp;{" "}
           <a href="https://ops.jbf.com" className="underline hover:text-arc-maroon">

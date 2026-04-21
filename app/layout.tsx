@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Cascade Demo V2 — Hillsborough County, FL",
+  title: "Cascade 2 — Pinellas County, FL",
   description:
-    "Conversational, anticipatory emergency mapping on real public data. Sibling to cascade-demo.",
+    "Conversational, anticipatory emergency mapping on real public data. Sibling to cascade1.",
 };
 
 const themeScript = `
