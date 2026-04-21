@@ -545,6 +545,14 @@ function PageContent() {
               </p>
             </div>
           </div>
+          {!activeWarning && (
+            <div className="hidden sm:flex items-center gap-3 text-[10px] font-data uppercase tracking-widest text-white/50">
+              <span><span className="tabular-nums">959,107</span> pop</span>
+              <span><span className="tabular-nums">245</span> tracts</span>
+              <span><span className="tabular-nums">36</span> FEMA decl</span>
+              <span><span className="tabular-nums">25.2%</span> ALICE</span>
+            </div>
+          )}
           <div className="flex items-center gap-3">
             {activeWarning && (
               <div className="flex items-center gap-2 px-3 py-1 bg-arc-red/20 border border-arc-red animate-pulse">
@@ -629,24 +637,7 @@ function PageContent() {
             )}
           </div>
         </div>
-      ) : (
-        <div className="no-print border-b border-arc-gray-100 dark:border-arc-gray-700 bg-white dark:bg-arc-gray-900 px-6 py-5">
-          <div className="text-[10px] font-data uppercase tracking-widest text-arc-gray-500 dark:text-arc-gray-300 mb-1">
-            Resting state
-          </div>
-          <div className="font-headline font-bold text-xl text-arc-black dark:text-arc-cream leading-tight">
-            No active warning — Pinellas County baseline
-          </div>
-          <div className="mt-2 text-[12px] text-arc-gray-500 dark:text-arc-gray-300">
-            Click{" "}
-            <span className="text-arc-red font-semibold">
-              Simulate NWS Tornado Alert
-            </span>{" "}
-            to load a demo warning, or browse {totalFullAssets} assets across{" "}
-            {ASSET_TYPES.length} categories below.
-          </div>
-        </div>
-      )}
+      ) : null}
 
       <div className="chip-bar border-b border-arc-gray-100 dark:border-arc-gray-700 bg-arc-cream/60 dark:bg-arc-black/40 px-4 py-2 flex gap-2 overflow-x-auto items-center">
         <Chip
@@ -695,21 +686,6 @@ function PageContent() {
         })}
       </div>
 
-      {/* County baseline — static context, kept muted beneath the chips. */}
-      <div className="no-print border-b border-arc-gray-100 dark:border-arc-gray-700 bg-arc-cream/40 dark:bg-arc-black/30 px-4 py-1 text-[10px] font-data uppercase tracking-widest text-arc-gray-500 dark:text-arc-gray-300 flex gap-4 overflow-x-auto whitespace-nowrap">
-        <span>
-          <span className="tabular-nums">959,107</span> pop
-        </span>
-        <span>
-          <span className="tabular-nums">245</span> tracts
-        </span>
-        <span>
-          <span className="tabular-nums">36</span> FEMA declarations
-        </span>
-        <span>
-          <span className="tabular-nums">25.2%</span> ALICE
-        </span>
-      </div>
 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-[2fr_1fr] min-h-0">
         <div className="map-area min-h-[50vh] lg:min-h-0 relative">

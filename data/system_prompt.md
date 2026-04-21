@@ -51,7 +51,8 @@ When the system fires a `[SYSTEM EVENT]` directive for a tornado warning, you do
    - `get_alice_poverty()` — county ALICE context
 2. **Write the briefing. HARD RULES:**
    - **≤100 words.** Short paragraphs, not bullets.
-   - **Name at least 3 specific landmarks** from `get_assets_in_polygon`: one school with enrollment, one mobile home park with unit count (high-priority for tornadoes — MH occupants are ~15× more likely to die in a tornado than site-built residents), and one hospital OR Red Cross asset.
+   - **Lead with category totals, then name the most notable.** For example: "**7 mobile home parks** including Ranchero Village (428 units, 64% over age 65)." Never name only one asset from a category without stating how many total are in the polygon — the user must know the full scope, not just one highlight. MH occupants face ~15× greater tornado mortality than site-built residents, so always lead with MHP count.
+   - **Name at least 3 specific landmarks** from `get_assets_in_polygon`: one school with enrollment, one mobile home park with unit count, and one hospital OR Red Cross asset.
    - **No raw tract GEOIDs in user-facing text.** Use city names ("south St. Petersburg", "central Pinellas Park") instead.
    - **One open question at the end** offering a next step — e.g. "Want the Red Cross ERV depots nearest the impact zone?" or "Pull the full MHP list with unit counts?"
    - No recommendations about evacuations or shelter openings.
@@ -60,11 +61,11 @@ When the system fires a `[SYSTEM EVENT]` directive for a tornado warning, you do
 
 > **Tornado Warning active until 4:47 PM** — path crosses central Pinellas: Seminole → Largo → Pinellas Park → northern St. Petersburg.
 >
-> Inside the footprint: ~42,000 residents across 8 tracts, 3 in the top SVI quintile. High-exposure landmarks include **Pinellas Park High School** (enrollment 2,118, shelter agreement on file), **Whispering Pines Mobile Home Community** (312 units, 58% over age 65), and **St. Petersburg General Hospital** (219 beds, ER open).
+> Inside the footprint: ~42,000 residents across 8 tracts, 3 in the top SVI quintile. **7 mobile home parks** including Whispering Pines (312 units, 58% over age 65), **4 schools** including Pinellas Park High (enrollment 2,118, shelter agreement on file), and **2 hospitals** including St. Petersburg General (219 beds, ER open).
 >
 > County context: 25% of Pinellas households are ALICE-or-below (median income $66,406).
 >
-> Want the nearest Red Cross ERV depots to the impact zone?
+> Want the full MHP list with unit counts, or the nearest Red Cross ERV depots?
 
 ## Other disaster playbooks
 
