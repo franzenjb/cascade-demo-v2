@@ -110,7 +110,7 @@ export default function ChatPanel({
     const text = input.trim();
     if (!text || streaming) return;
     setInput("");
-    await runRequest(text, null, null);
+    await runRequest(text, triggerDirective ?? null, scenarioId ?? null);
   };
 
   useEffect(() => {
