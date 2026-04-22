@@ -230,7 +230,7 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: var(--arc-gray-500); }
   100% { transform: translateX(-50%); }
 }
 .animate-crawl {
-  animation: crawl 60s linear infinite;
+  animation: crawl 120s linear infinite;
 }
 .crawl-bar:hover .animate-crawl {
   animation-play-state: paused;

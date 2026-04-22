@@ -94,7 +94,7 @@ export default function BriefingCard({
           Seminole through Largo, Pinellas Park, and into north St. Petersburg, exiting into Tampa Bay
           near Gandy Boulevard.
         </p>
-        <p className="text-xs text-arc-gray-500 dark:text-arc-gray-400 mt-1.5 font-data">
+        <p className="text-xs text-arc-gray-700 dark:text-white mt-1.5 font-data font-bold">
           TAKE COVER NOW. Move to an interior room on the lowest floor of a sturdy building.
         </p>
       </div>
@@ -119,7 +119,7 @@ export default function BriefingCard({
 
       {/* Asset breakdown */}
       <div className="px-4 py-3 border-b border-arc-gray-100 dark:border-arc-gray-700">
-        <div className="text-[10px] font-data uppercase tracking-widest text-arc-gray-500 dark:text-arc-gray-300 mb-2">
+        <div className="text-[10px] font-data uppercase tracking-widest text-arc-gray-500 dark:text-white/80 mb-2">
           Assets in Footprint
         </div>
         <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
@@ -171,14 +171,14 @@ export default function BriefingCard({
       <div className="px-4 py-3">
         {alicePct != null && (
           <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-[10px] font-data uppercase tracking-widest text-arc-gray-500 dark:text-arc-gray-300">
+            <span className="text-[10px] font-data uppercase tracking-widest text-arc-gray-500 dark:text-white/80">
               ALICE
             </span>
             <span className="font-data font-bold text-sm text-arc-black dark:text-arc-cream tabular-nums">
               {alicePct.toFixed(1)}%
             </span>
             {aliceAbsolute != null && (
-              <span className="font-data text-xs text-arc-gray-500 dark:text-arc-gray-300 tabular-nums">
+              <span className="font-data text-xs text-arc-gray-500 dark:text-white/80 tabular-nums">
                 ({aliceAbsolute.toLocaleString()} people)
               </span>
             )}
@@ -187,7 +187,7 @@ export default function BriefingCard({
 
         {topTracts.length > 0 && (
           <div>
-            <div className="text-[10px] font-data uppercase tracking-widest text-arc-gray-500 dark:text-arc-gray-300 mb-1.5">
+            <div className="text-[10px] font-data uppercase tracking-widest text-arc-gray-500 dark:text-white/80 mb-1.5">
               Most Vulnerable Areas
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -232,11 +232,11 @@ function KPI({
       >
         {value}
       </div>
-      <div className="text-[10px] font-data uppercase tracking-widest text-arc-gray-500 dark:text-arc-gray-300 mt-1">
+      <div className="text-[10px] font-data uppercase tracking-widest text-arc-gray-500 dark:text-white/80 mt-1">
         {label}
       </div>
       {sublabel && (
-        <div className="text-[9px] font-data text-arc-gray-400 dark:text-arc-gray-500 mt-0.5">
+        <div className="text-[9px] font-data text-arc-gray-400 dark:text-white/50 mt-0.5">
           {sublabel}
         </div>
       )}
@@ -266,11 +266,11 @@ function AssetRow({
       >
         {count}
       </span>
-      <span className="font-data text-xs text-arc-gray-700 dark:text-arc-gray-300">
+      <span className="font-data text-xs text-arc-gray-700 dark:text-white/80">
         {label}
       </span>
       {detail && (
-        <span className="font-data text-[10px] text-arc-gray-500 dark:text-arc-gray-400 tabular-nums">
+        <span className="font-data text-[10px] text-arc-gray-500 dark:text-white/60 tabular-nums">
           ({detail})
         </span>
       )}

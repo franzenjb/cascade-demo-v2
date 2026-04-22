@@ -192,6 +192,7 @@ function PageContent() {
     useState<AssetLayerVisibility>(DEFAULT_VISIBILITY);
   const [activeWarning, setActiveWarning] = useState<ActiveWarning | null>(null);
   const [countdown, setCountdown] = useState<string | null>(null);
+  const [stormReportCount, setStormReportCount] = useState(0);
 
   const [footprintByCategory, setFootprintByCategory] = useState<
     Partial<Record<AssetType, DrillAsset[]>>
@@ -604,6 +605,7 @@ function PageContent() {
         </div>
         <div className="h-[2px] bg-arc-red" />
       </header>
+      <NewsCrawl active={!!activeWarning} onReportCount={setStormReportCount} />
 
 
       <div className="chip-bar border-b border-arc-gray-100 dark:border-arc-gray-700 bg-arc-cream/60 dark:bg-arc-black/40 px-4 py-2 flex gap-2 overflow-x-auto items-center">
@@ -667,6 +669,7 @@ function PageContent() {
             riskFilter={riskFilter}
             onTractsLoaded={setTracts}
             onTractClick={handleTractClick}
+            stormReportCount={stormReportCount}
           />
           {activeWarning && (
             <button
@@ -805,7 +808,6 @@ function PageContent() {
           </a>
         </span>
       </footer>
-      <NewsCrawl active={!!activeWarning} />
     </main>
   );
 }
