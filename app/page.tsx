@@ -610,7 +610,7 @@ function PageContent() {
         </div>
         <div className="h-[2px] bg-arc-red" />
       </header>
-      <NewsCrawl active={!!activeWarning} />
+      <NewsCrawl active={!!activeWarning} countdown={countdown} />
 
 
       <div className="chip-bar border-b border-arc-gray-100 dark:border-arc-gray-700 bg-arc-cream/60 dark:bg-arc-black/40 px-4 py-2 flex gap-2 overflow-x-auto items-center">

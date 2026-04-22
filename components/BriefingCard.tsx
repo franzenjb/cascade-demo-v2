@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { DrillAsset } from "./DrillPanel";
 import type { AssetType } from "./MapView";
 import { ASSET_TYPES } from "./MapView";
@@ -72,32 +73,8 @@ export default function BriefingCard({
 
   return (
     <div className="border-b border-arc-gray-100 dark:border-arc-gray-700 bg-white dark:bg-arc-gray-900">
-      {/* Header */}
-      <div className="px-4 py-3 bg-arc-red/10 dark:bg-arc-red/20 border-b border-arc-red/30">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 bg-arc-red rounded-full animate-pulse" />
-            <span className="font-headline font-bold text-base text-arc-red uppercase tracking-wide">
-              Tornado Warning
-            </span>
-          </div>
-          {countdown && (
-            <span className="font-data font-bold text-sm text-arc-red tabular-nums">
-              {countdown}
-            </span>
-          )}
-        </div>
-        <p className="text-sm text-arc-black dark:text-arc-cream leading-relaxed">
-          The National Weather Service has issued a <span className="font-bold">Tornado Warning</span> for
-          central Pinellas County. A severe thunderstorm capable of producing a tornado was located
-          near Seminole, moving northeast at 35 mph. Path tracks NE across the peninsula from
-          Seminole through Largo, Pinellas Park, and into north St. Petersburg, exiting into Tampa Bay
-          near Gandy Boulevard.
-        </p>
-        <p className="text-xs text-arc-gray-700 dark:text-white mt-1.5 font-data font-bold">
-          TAKE COVER NOW. Move to an interior room on the lowest floor of a sturdy building.
-        </p>
-      </div>
+      {/* Live incoming reports */}
+      <LiveReportsFeed countdown={countdown} />
 
       {/* Primary KPIs */}
       <div className="grid grid-cols-3 divide-x divide-arc-gray-100 dark:divide-arc-gray-700 border-b border-arc-gray-100 dark:border-arc-gray-700">
@@ -205,6 +182,127 @@ export default function BriefingCard({
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+const LIVE_REPORTS = [
+  {
+    time: "4:15 PM",
+    source: "NWS Tampa Bay",
+    text: "Severe thunderstorm producing a TORNADO located near Seminole Blvd and Park Blvd, moving NE at 35 mph. TAKE COVER NOW.",
+    critical: true,
+  },
+  {
+    time: "4:21 PM",
+    source: "Pinellas Sheriff",
+    text: "Report of funnel cloud near the intersection of Ulmerton Rd and Starkey Rd. Deputies responding. Avoid the area.",
+    critical: true,
+  },
+  {
+    time: "4:24 PM",
+    source: "NWS Tampa Bay",
+    text: "CONFIRMED TORNADO on the ground near Pinellas Park. Debris signature detected on radar.",
+    critical: true,
+  },
+  {
+    time: "4:26 PM",
+    source: "Pinellas Sheriff",
+    text: "Multiple 911 calls reporting structural damage near 66th St N and 54th Ave N. Power lines down. First responders en route.",
+    critical: false,
+  },
+  {
+    time: "4:28 PM",
+    source: "PCFD Station 32",
+    text: "Engine 32 and Rescue 32 dispatched to mobile home park at 7200 block of 46th Ave N. Reports of roof damage and injuries.",
+    critical: false,
+  },
+  {
+    time: "4:30 PM",
+    source: "Duke Energy",
+    text: "Approximately 8,400 customers without power in Pinellas Park and Lealman areas. Crews staging.",
+    critical: false,
+  },
+  {
+    time: "4:33 PM",
+    source: "NWS Tampa Bay",
+    text: "Tornado continuing NE across Pinellas. Estimated path width 200 yards. Expected to cross I-275 near 38th Ave N by 4:40 PM.",
+    critical: true,
+  },
+  {
+    time: "4:35 PM",
+    source: "Pinellas Sheriff",
+    text: "Overturned vehicles on US-19 near Park Blvd interchange. Northbound lanes blocked.",
+    critical: false,
+  },
+];
+
+function LiveReportsFeed({ countdown }: { countdown: string | null }) {
+  const [visibleCount, setVisibleCount] = useState(2);
+
+  useEffect(() => {
+    if (visibleCount >= LIVE_REPORTS.length) return;
+    const timer = setInterval(() => {
+      setVisibleCount((c) => Math.min(c + 1, LIVE_REPORTS.length));
+    }, 10000);
+    return () => clearInterval(timer);
+  }, [visibleCount]);
+
+  // Show newest first
+  const visible = LIVE_REPORTS.slice(0, visibleCount).reverse();
+
+  return (
+    <div className="border-b border-arc-red/30 bg-arc-red/10 dark:bg-arc-red/20">
+      <div className="px-4 py-2 flex items-center justify-between border-b border-arc-red/20">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 bg-arc-red rounded-full animate-pulse" />
+          <span className="text-[10px] font-data font-bold uppercase tracking-widest text-arc-red">
+            Live Reports
+          </span>
+        </div>
+        {countdown && (
+          <span className="font-data font-bold text-xs text-arc-red tabular-nums">
+            {countdown}
+          </span>
+        )}
+      </div>
+      <div className="max-h-[140px] overflow-y-auto">
+        {visible.map((r, i) => (
+          <div
+            key={r.time + r.source}
+            className={`px-4 py-2 border-b border-arc-red/10 last:border-b-0 ${
+              i === 0
+                ? "bg-arc-red/20 dark:bg-arc-red/30"
+                : ""
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className={`font-data font-bold text-[10px] tabular-nums ${
+                i === 0 ? "text-arc-red" : "text-arc-gray-500 dark:text-white/60"
+              }`}>
+                {r.time}
+              </span>
+              <span className={`font-data font-bold text-[10px] uppercase ${
+                i === 0 ? "text-arc-red" : "text-arc-gray-700 dark:text-white/80"
+              }`}>
+                {r.source}
+              </span>
+              {i === 0 && (
+                <span className="text-[9px] font-data font-bold uppercase tracking-wider bg-arc-red text-white px-1.5 py-0.5 rounded">
+                  New
+                </span>
+              )}
+            </div>
+            <p className={`font-data text-[11px] leading-snug ${
+              i === 0
+                ? "text-arc-black dark:text-white font-semibold"
+                : "text-arc-gray-700 dark:text-white/70"
+            }`}>
+              {r.text}
+            </p>
+          </div>
+        ))}
       </div>
     </div>
   );

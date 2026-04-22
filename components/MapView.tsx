@@ -648,7 +648,7 @@ export default function MapView({
         const letter = i === 0 ? "A" : "B";
 
       const el = document.createElement("div");
-      el.className = "storm-sighting-marker";
+      el.className = `storm-sighting-marker storm-sighting-${letter.toLowerCase()}`;
       el.innerHTML = `
         <div class="storm-sighting-pulse"></div>
         <div class="storm-sighting-dot">${letter}</div>
