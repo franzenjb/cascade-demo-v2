@@ -576,72 +576,76 @@ export default function MapView({
 
   // Storm sighting HTML markers — Point A and Point B with glowing dots + info labels
   const stormMarkersRef = useRef<maplibregl.Marker[]>([]);
+  const stormReportCountRef = useRef(stormReportCount);
+  stormReportCountRef.current = stormReportCount;
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) return;
+    if (!map) return;
 
-    // Remove old markers
-    stormMarkersRef.current.forEach((m) => m.remove());
-    stormMarkersRef.current = [];
+    const addStormMarkers = () => {
+      const count = stormReportCountRef.current;
 
-    const visible = STORM_REPORTS.slice(0, stormReportCount);
-    if (visible.length === 0) {
-      // Clear line if exists
-      const lineSrc = map.getSource("storm-track-line") as maplibregl.GeoJSONSource | undefined;
-      if (lineSrc) lineSrc.setData({ type: "FeatureCollection", features: [] });
-      return;
-    }
+      // Remove old markers
+      stormMarkersRef.current.forEach((m) => m.remove());
+      stormMarkersRef.current = [];
 
-    // Line between points
-    const lineFC: GeoJSON.FeatureCollection = {
-      type: "FeatureCollection",
-      features:
-        visible.length >= 2
-          ? [
-              {
-                type: "Feature",
-                geometry: {
-                  type: "LineString",
-                  coordinates: visible.map((r) => [r.lon, r.lat]),
+      const visible = STORM_REPORTS.slice(0, count);
+      if (visible.length === 0) {
+        const lineSrc = map.getSource("storm-track-line") as maplibregl.GeoJSONSource | undefined;
+        if (lineSrc) lineSrc.setData({ type: "FeatureCollection", features: [] });
+        return;
+      }
+
+      // Line between points
+      const lineFC: GeoJSON.FeatureCollection = {
+        type: "FeatureCollection",
+        features:
+          visible.length >= 2
+            ? [
+                {
+                  type: "Feature",
+                  geometry: {
+                    type: "LineString",
+                    coordinates: visible.map((r) => [r.lon, r.lat]),
+                  },
+                  properties: {},
                 },
-                properties: {},
-              },
-            ]
-          : [],
-    };
+              ]
+            : [],
+      };
 
-    const lineSrc = map.getSource("storm-track-line") as maplibregl.GeoJSONSource | undefined;
-    if (lineSrc) {
-      lineSrc.setData(lineFC);
-    } else {
-      map.addSource("storm-track-line", { type: "geojson", data: lineFC });
-      map.addLayer({
-        id: "storm-track-line-glow",
-        type: "line",
-        source: "storm-track-line",
-        paint: {
-          "line-color": "#fbbf24",
-          "line-width": 14,
-          "line-opacity": 0.5,
-          "line-blur": 4,
-        },
-      });
-      map.addLayer({
-        id: "storm-track-line-layer",
-        type: "line",
-        source: "storm-track-line",
-        paint: {
-          "line-color": "#dc2626",
-          "line-width": 5,
-          "line-opacity": 1,
-        },
-      });
-    }
+      const lineSrc = map.getSource("storm-track-line") as maplibregl.GeoJSONSource | undefined;
+      if (lineSrc) {
+        lineSrc.setData(lineFC);
+      } else {
+        map.addSource("storm-track-line", { type: "geojson", data: lineFC });
+        map.addLayer({
+          id: "storm-track-line-glow",
+          type: "line",
+          source: "storm-track-line",
+          paint: {
+            "line-color": "#fbbf24",
+            "line-width": 14,
+            "line-opacity": 0.5,
+            "line-blur": 4,
+          },
+        });
+        map.addLayer({
+          id: "storm-track-line-layer",
+          type: "line",
+          source: "storm-track-line",
+          paint: {
+            "line-color": "#dc2626",
+            "line-width": 5,
+            "line-opacity": 1,
+          },
+        });
+      }
 
-    // HTML markers for each sighting
-    visible.forEach((r, i) => {
-      const letter = i === 0 ? "A" : "B";
+      // HTML markers for each sighting
+      visible.forEach((r, i) => {
+        const letter = i === 0 ? "A" : "B";
 
       const el = document.createElement("div");
       el.className = "storm-sighting-marker";
@@ -660,6 +664,14 @@ export default function MapView({
         .addTo(map);
       stormMarkersRef.current.push(marker);
     });
+    };
+
+    // Handle timing: if map not ready, wait for style load
+    if (map.isStyleLoaded()) {
+      addStormMarkers();
+    } else {
+      map.once("load", addStormMarkers);
+    }
   }, [stormReportCount]);
 
   return (

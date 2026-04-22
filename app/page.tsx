@@ -26,6 +26,7 @@ import { ToastProvider, useToast } from "@/lib/use-toast";
 import type { TractPopupProps } from "@/lib/tract-popup";
 import assetsJson from "@/data/pinellas_assets.json";
 import NewsCrawl from "@/components/NewsCrawl";
+import { STORM_REPORTS } from "@/lib/storm-reports";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
@@ -452,6 +453,8 @@ function PageContent() {
       expires: payload.expires,
       scenarioId: payload.scenarioId,
     });
+    // Show storm sighting markers immediately — delayed 3s for map to load
+    setTimeout(() => setStormReportCount(STORM_REPORTS.length), 3000);
 
     // Filter assets to those inside the warning polygon
     const poly = payload.polygon as { type: string; coordinates: number[][][] };
@@ -530,9 +533,11 @@ function PageContent() {
   };
 
   const focusWholeView = () => {
-    const warnB = boundsForInstructions(instructions);
+    // Only use the first instruction (warning polygon), not all drawn layers
+    const warningOnly = instructions.length > 0 ? [instructions[0]] : [];
+    const warnB = boundsForInstructions(warningOnly);
     if (warnB) {
-      setFocusTarget({ bounds: warnB, padding: 80, maxZoom: 13 });
+      setFocusTarget({ bounds: warnB, padding: 40, maxZoom: 12.5 });
     } else {
       setFocusTarget({ center: CENTER, zoom: ZOOM });
     }
@@ -605,7 +610,7 @@ function PageContent() {
         </div>
         <div className="h-[2px] bg-arc-red" />
       </header>
-      <NewsCrawl active={!!activeWarning} onReportCount={setStormReportCount} />
+      <NewsCrawl active={!!activeWarning} />
 
 
       <div className="chip-bar border-b border-arc-gray-100 dark:border-arc-gray-700 bg-arc-cream/60 dark:bg-arc-black/40 px-4 py-2 flex gap-2 overflow-x-auto items-center">
