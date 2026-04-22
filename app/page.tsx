@@ -194,6 +194,7 @@ function PageContent() {
   const [activeWarning, setActiveWarning] = useState<ActiveWarning | null>(null);
   const [countdown, setCountdown] = useState<string | null>(null);
   const [stormReportCount, setStormReportCount] = useState(0);
+  const [stormComplete, setStormComplete] = useState(false);
 
   const [footprintByCategory, setFootprintByCategory] = useState<
     Partial<Record<AssetType, DrillAsset[]>>
@@ -252,6 +253,7 @@ function PageContent() {
     if (!activeWarning) {
       setCountdown(null);
       setStormReportCount(0);
+      setStormComplete(false);
       if (expiryTimerRef.current) {
         clearTimeout(expiryTimerRef.current);
         expiryTimerRef.current = null;
@@ -459,14 +461,22 @@ function PageContent() {
       expires: payload.expires,
       scenarioId: payload.scenarioId,
     });
-    // Drip-feed storm reports: first after 3s, then every 15s, cycle after H
+    // Drip-feed storm reports: first after 3s, then every 15s, hold at H
     if (stormIntervalRef.current) clearInterval(stormIntervalRef.current);
+    setStormComplete(false);
     const startDrip = () => {
       setStormReportCount(1);
       stormIntervalRef.current = setInterval(() => {
-        setStormReportCount((prev) =>
-          prev >= STORM_REPORTS.length ? 1 : prev + 1,
-        );
+        setStormReportCount((prev) => {
+          if (prev >= STORM_REPORTS.length) {
+            // All reports shown — stop interval, show restart after 30s
+            if (stormIntervalRef.current) clearInterval(stormIntervalRef.current);
+            stormIntervalRef.current = null;
+            setTimeout(() => setStormComplete(true), 30000);
+            return prev;
+          }
+          return prev + 1;
+        });
       }, 15000);
     };
     setTimeout(startDrip, 3000);
@@ -537,6 +547,23 @@ function PageContent() {
 
   const shortTractName = (raw: string) =>
     raw.replace(/^Census Tract\s+/i, "");
+
+  const restartStormTrack = () => {
+    setStormComplete(false);
+    setStormReportCount(1);
+    if (stormIntervalRef.current) clearInterval(stormIntervalRef.current);
+    stormIntervalRef.current = setInterval(() => {
+      setStormReportCount((prev) => {
+        if (prev >= STORM_REPORTS.length) {
+          if (stormIntervalRef.current) clearInterval(stormIntervalRef.current);
+          stormIntervalRef.current = null;
+          setTimeout(() => setStormComplete(true), 30000);
+          return prev;
+        }
+        return prev + 1;
+      });
+    }, 15000);
+  };
 
 
   const handleAssetClick = (a: DrillAsset) => {
@@ -738,6 +765,8 @@ function PageContent() {
                   topTracts={topTracts}
                   onTractClick={flyToTract}
                   stormReportCount={stormReportCount}
+                  stormComplete={stormComplete}
+                  onRestart={restartStormTrack}
                 />
               ) : (
                 <ChatPanel

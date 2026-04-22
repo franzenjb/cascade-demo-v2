@@ -647,11 +647,11 @@ export default function MapView({
       layout: {
         "text-field": ["get", "letter"],
         "text-size": 16,
-        "text-font": ["Open Sans Bold"],
+        "text-font": ["Noto Sans Bold"],
         "text-allow-overlap": true,
         "icon-allow-overlap": true,
       },
-      paint: { "text-color": "#ffffff", "text-halo-color": "#000000", "text-halo-width": 1 },
+      paint: { "text-color": "#ffffff", "text-halo-color": "#000000", "text-halo-width": 2 },
     });
     stormLayersInitRef.current = true;
   };

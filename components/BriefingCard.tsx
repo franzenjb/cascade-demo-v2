@@ -27,6 +27,8 @@ interface Props {
   topTracts: TractHit[];
   onTractClick?: (nameOrGeoid: string) => void;
   stormReportCount: number;
+  stormComplete?: boolean;
+  onRestart?: () => void;
 }
 
 function shortTractName(raw: string) {
@@ -40,6 +42,8 @@ export default function BriefingCard({
   topTracts,
   onTractClick,
   stormReportCount,
+  stormComplete,
+  onRestart,
 }: Props) {
   const mhps = footprintByCategory.mobile_home_park ?? [];
   const schools = footprintByCategory.school ?? [];
@@ -141,6 +145,17 @@ export default function BriefingCard({
         {stormReportCount === 0 && (
           <div className="px-4 py-6 text-center text-[11px] font-data text-arc-gray-500 dark:text-white/50 uppercase tracking-wider">
             Awaiting first report...
+          </div>
+        )}
+        {stormComplete && onRestart && (
+          <div className="px-4 py-4 text-center">
+            <button
+              type="button"
+              onClick={onRestart}
+              className="px-4 py-2 bg-arc-red text-white font-data font-bold text-xs uppercase tracking-wider hover:bg-red-700 transition-colors"
+            >
+              Restart Simulation
+            </button>
           </div>
         )}
       </div>
