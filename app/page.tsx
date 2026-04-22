@@ -546,11 +546,11 @@ function PageContent() {
             </div>
           </div>
           {!activeWarning && (
-            <div className="hidden sm:flex items-center gap-3 text-[10px] font-data uppercase tracking-widest text-white/50">
+            <div className="hidden sm:flex items-center gap-4 text-xs font-data uppercase tracking-wider text-white/90 font-semibold">
               <span><span className="tabular-nums">959,107</span> pop</span>
               <span><span className="tabular-nums">245</span> tracts</span>
               <span><span className="tabular-nums">36</span> FEMA decl</span>
-              <span><span className="tabular-nums">25.2%</span> ALICE</span>
+              <span><span className="tabular-nums">25.2%</span> ALICE <span className="font-normal text-white/70">(241,695 households)</span></span>
             </div>
           )}
           <div className="flex items-center gap-3">
