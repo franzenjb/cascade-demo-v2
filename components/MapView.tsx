@@ -595,75 +595,65 @@ export default function MapView({
         data: { type: "FeatureCollection", features: [] },
       });
     }
-    // Line glow
-    if (!map.getLayer("storm-track-line-glow")) {
-      map.addLayer({
-        id: "storm-track-line-glow",
-        type: "line",
-        source: "storm-track-line",
-        paint: { "line-color": "#fbbf24", "line-width": 12, "line-opacity": 0.5, "line-blur": 4 },
-      });
-    }
-    // Line
-    if (!map.getLayer("storm-track-line-layer")) {
-      map.addLayer({
-        id: "storm-track-line-layer",
-        type: "line",
-        source: "storm-track-line",
-        paint: { "line-color": "#dc2626", "line-width": 4, "line-opacity": 1 },
-      });
-    }
-    // Point glow
-    if (!map.getLayer("storm-track-glow")) {
-      map.addLayer({
-        id: "storm-track-glow",
-        type: "circle",
-        source: "storm-track-points",
-        paint: { "circle-radius": 20, "circle-color": "#fbbf24", "circle-opacity": 0.4, "circle-blur": 1 },
-      });
-    }
-    // Point dot
-    if (!map.getLayer("storm-track-dot")) {
-      map.addLayer({
-        id: "storm-track-dot",
-        type: "circle",
-        source: "storm-track-points",
-        paint: {
-          "circle-radius": 10,
-          "circle-color": "#dc2626",
-          "circle-stroke-width": 3,
-          "circle-stroke-color": "#fbbf24",
-        },
-      });
-    }
-    // Letter label
-    if (!map.getLayer("storm-track-letter")) {
-      map.addLayer({
-        id: "storm-track-letter",
-        type: "symbol",
-        source: "storm-track-points",
-        layout: {
-          "text-field": ["get", "letter"],
-          "text-size": 13,
-          "text-font": ["Open Sans Bold"],
-          "text-allow-overlap": true,
-          "icon-allow-overlap": true,
-        },
-        paint: { "text-color": "#ffffff" },
-      });
-    }
-    stormLayersInitRef.current = true;
-    // Ensure storm layers render on top of all other layers
-    const topOrder = [
-      "storm-track-line-glow",
-      "storm-track-line-layer",
-      "storm-track-glow",
-      "storm-track-dot",
+    // Remove existing layers so we can re-add on top
+    const stormIds = [
       "storm-track-letter",
+      "storm-track-dot",
+      "storm-track-glow",
+      "storm-track-line-layer",
+      "storm-track-line-glow",
     ];
-    for (const id of topOrder) {
-      if (map.getLayer(id)) map.moveLayer(id);
+    for (const id of stormIds) {
+      if (map.getLayer(id)) map.removeLayer(id);
     }
+    // Line glow
+    map.addLayer({
+      id: "storm-track-line-glow",
+      type: "line",
+      source: "storm-track-line",
+      paint: { "line-color": "#fbbf24", "line-width": 24, "line-opacity": 0.6, "line-blur": 6 },
+    });
+    // Line
+    map.addLayer({
+      id: "storm-track-line-layer",
+      type: "line",
+      source: "storm-track-line",
+      paint: { "line-color": "#dc2626", "line-width": 6, "line-opacity": 1 },
+    });
+    // Point glow — animated in rAF
+    map.addLayer({
+      id: "storm-track-glow",
+      type: "circle",
+      source: "storm-track-points",
+      paint: { "circle-radius": 40, "circle-color": "#fbbf24", "circle-opacity": 0.6, "circle-blur": 1 },
+    });
+    // Point dot
+    map.addLayer({
+      id: "storm-track-dot",
+      type: "circle",
+      source: "storm-track-points",
+      paint: {
+        "circle-radius": 16,
+        "circle-color": "#dc2626",
+        "circle-stroke-width": 4,
+        "circle-stroke-color": "#fbbf24",
+      },
+    });
+    // Letter label
+    map.addLayer({
+      id: "storm-track-letter",
+      type: "symbol",
+      source: "storm-track-points",
+      layout: {
+        "text-field": ["get", "letter"],
+        "text-size": 16,
+        "text-font": ["Open Sans Bold"],
+        "text-allow-overlap": true,
+        "icon-allow-overlap": true,
+      },
+      paint: { "text-color": "#ffffff", "text-halo-color": "#000000", "text-halo-width": 1 },
+    });
+    stormLayersInitRef.current = true;
   };
 
   const updateStormData = (map: MlMap, count: number) => {
@@ -707,16 +697,32 @@ export default function MapView({
     else map.once("idle", run);
   }, [stormReportCount]);
 
-  // Pulse animation via requestAnimationFrame
+  // Pulse animation via requestAnimationFrame + z-order enforcement
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     let animId: number;
+    let lastZCheck = 0;
+    const stormTopOrder = [
+      "storm-track-line-glow",
+      "storm-track-line-layer",
+      "storm-track-glow",
+      "storm-track-dot",
+      "storm-track-letter",
+    ];
     const animate = () => {
+      const now = performance.now();
       if (map.getLayer("storm-track-glow")) {
-        const t = performance.now() / 1000;
-        map.setPaintProperty("storm-track-glow", "circle-opacity", 0.3 + 0.25 * Math.sin(t * 3));
-        map.setPaintProperty("storm-track-glow", "circle-radius", 16 + 8 * Math.sin(t * 3));
+        const t = now / 1000;
+        map.setPaintProperty("storm-track-glow", "circle-opacity", 0.4 + 0.35 * Math.sin(t * 3));
+        map.setPaintProperty("storm-track-glow", "circle-radius", 30 + 15 * Math.sin(t * 3));
+      }
+      // Re-assert z-order every 2 seconds (asset layers load async)
+      if (now - lastZCheck > 2000) {
+        lastZCheck = now;
+        for (const id of stormTopOrder) {
+          if (map.getLayer(id)) map.moveLayer(id);
+        }
       }
       animId = requestAnimationFrame(animate);
     };
