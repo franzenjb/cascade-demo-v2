@@ -8,6 +8,7 @@ import type {
   MapInstruction,
 } from "@/lib/types";
 import ChatPanel from "@/components/ChatPanel";
+import MobileSheet from "@/components/MobileSheet";
 import TriggerButton from "@/components/TriggerButton";
 import DrillPanel, { type DrillAsset } from "@/components/DrillPanel";
 import AllAssetsAccordion from "@/components/AllAssetsAccordion";
@@ -704,8 +705,8 @@ function PageContent() {
       </div>
 
 
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-[2fr_1fr] min-h-0">
-        <div className="map-area min-h-[50vh] lg:min-h-0 relative">
+      <div className="flex-1 min-h-0 relative flex md:grid md:grid-cols-[2fr_1fr]">
+        <div className="map-area flex-1 md:min-h-0 relative">
           <MapView
             center={CENTER}
             zoom={ZOOM}
@@ -735,8 +736,8 @@ function PageContent() {
             </button>
           )}
         </div>
-        <div className="right-panel border-l border-arc-gray-100 dark:border-arc-gray-700 flex flex-col min-h-0 bg-white dark:bg-arc-gray-900">
-          <div className="tab-bar flex items-center border-b border-arc-gray-100 dark:border-arc-gray-700">
+        <MobileSheet>
+          <div className="tab-bar flex items-center border-b border-arc-gray-100 dark:border-arc-gray-700 shrink-0">
             <TabButton
               active={rightTab === "briefing"}
               onClick={() => setRightTab("briefing")}
@@ -818,11 +819,11 @@ function PageContent() {
               onVisibilityChange={setAssetVisibility}
             />
           )}
-        </div>
+        </MobileSheet>
       </div>
 
       {topTracts.length > 0 && rightTab === "assets" && activeCategory && (
-        <div className="border-t border-arc-gray-100 dark:border-arc-gray-700 bg-arc-cream/60 dark:bg-arc-black/40 px-4 py-2 text-[10px] font-data uppercase tracking-wider text-arc-gray-500 dark:text-arc-gray-300">
+        <div className="hidden md:block border-t border-arc-gray-100 dark:border-arc-gray-700 bg-arc-cream/60 dark:bg-arc-black/40 px-4 py-2 text-[10px] font-data uppercase tracking-wider text-arc-gray-500 dark:text-arc-gray-300">
           Top vulnerable areas:{" "}
           {topTracts
             .slice(0, 3)
@@ -840,7 +841,7 @@ function PageContent() {
         </div>
       )}
 
-      <footer className="border-t border-arc-gray-100 dark:border-arc-gray-700 px-4 py-2 text-[10px] text-arc-gray-500 dark:text-arc-gray-300 font-data uppercase tracking-wider flex items-center justify-between">
+      <footer className="hidden md:flex border-t border-arc-gray-100 dark:border-arc-gray-700 px-4 py-2 text-[10px] text-arc-gray-500 dark:text-arc-gray-300 font-data uppercase tracking-wider items-center justify-between">
         <span>
           CDC SVI · FEMA NRI · ALICE · OpenFEMA · TIGERweb · FL Parcels ·
           Pinellas Assets
