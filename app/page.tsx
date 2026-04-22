@@ -25,6 +25,7 @@ import ToastContainer from "@/components/Toast";
 import { ToastProvider, useToast } from "@/lib/use-toast";
 import type { TractPopupProps } from "@/lib/tract-popup";
 import assetsJson from "@/data/pinellas_assets.json";
+import NewsCrawl from "@/components/NewsCrawl";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
@@ -553,25 +554,6 @@ function PageContent() {
     setAssetVisibility(onlyThis(cat));
   };
 
-  const copyBriefing = async () => {
-    const last = [...messages]
-      .reverse()
-      .find((m) => m.role === "assistant" && m.content.trim());
-    if (!last) {
-      toast("No briefing to copy", "error");
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(last.content);
-      toast("Briefing copied to clipboard", "success");
-    } catch {
-      toast("Copy failed — try selecting the text manually", "error");
-    }
-  };
-
-  const printBriefing = () => {
-    window.print();
-  };
 
   return (
     <main className="h-screen flex flex-col bg-arc-cream dark:bg-arc-black">
@@ -686,6 +668,21 @@ function PageContent() {
             onTractsLoaded={setTracts}
             onTractClick={handleTractClick}
           />
+          {activeWarning && (
+            <button
+              onClick={focusWholeView}
+              className="absolute top-2 right-14 z-10 bg-white dark:bg-arc-gray-900 border border-arc-gray-300 dark:border-arc-gray-700 hover:border-arc-red px-2.5 py-1.5 shadow-md transition-colors flex items-center gap-1.5"
+              title="Zoom to warning area"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-arc-red">
+                <path d="M8 1v4M8 11v4M1 8h4M11 8h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <rect x="3" y="3" width="10" height="10" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+              </svg>
+              <span className="text-[10px] font-data font-bold uppercase tracking-wider text-arc-red">
+                Warning Area
+              </span>
+            </button>
+          )}
         </div>
         <div className="right-panel border-l border-arc-gray-100 dark:border-arc-gray-700 flex flex-col min-h-0 bg-white dark:bg-arc-gray-900">
           <div className="tab-bar flex items-center border-b border-arc-gray-100 dark:border-arc-gray-700">
@@ -706,26 +703,6 @@ function PageContent() {
               onClick={() => setRightTab("details")}
               label="Details"
             />
-            <div className="ml-auto pr-2 flex gap-1">
-              {streamTick > 0 && (
-                <>
-                  <button
-                    onClick={copyBriefing}
-                    className="text-[10px] font-data uppercase tracking-wider px-2 py-1 border border-arc-gray-300 dark:border-arc-gray-700 text-arc-gray-900 dark:text-arc-cream hover:border-arc-maroon hover:text-arc-maroon"
-                    title="Copy briefing to clipboard"
-                  >
-                    Copy
-                  </button>
-                  <button
-                    onClick={printBriefing}
-                    className="text-[10px] font-data uppercase tracking-wider px-2 py-1 border border-arc-gray-300 dark:border-arc-gray-700 text-arc-gray-900 dark:text-arc-cream hover:border-arc-maroon hover:text-arc-maroon"
-                    title="Print briefing"
-                  >
-                    Print
-                  </button>
-                </>
-              )}
-            </div>
           </div>
 
           {rightTab === "briefing" && (
@@ -828,6 +805,7 @@ function PageContent() {
           </a>
         </span>
       </footer>
+      <NewsCrawl active={!!activeWarning} />
     </main>
   );
 }

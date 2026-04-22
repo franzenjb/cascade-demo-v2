@@ -224,6 +224,18 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: var(--arc-gray-500); }
   animation: slide-in 200ms ease-out;
 }
 
+/* News crawl ticker */
+@keyframes crawl {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-crawl {
+  animation: crawl 60s linear infinite;
+}
+.crawl-bar:hover .animate-crawl {
+  animation-play-state: paused;
+}
+
 /* Print stylesheet */
 @media print {
   header, .chip-bar, .map-area, .tab-bar, .chat-input-area,
