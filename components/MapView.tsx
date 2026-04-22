@@ -445,6 +445,7 @@ export default function MapView({
     map.once("style.load", async () => {
       assetLayersInitRef.current = false;
       tractLayerInitRef.current = false;
+      stormLayersInitRef.current = false;
       drawnCountRef.current = 0;
       appliedCountRef.current = 0;
       await initAssetLayersRef.current?.();
@@ -452,6 +453,9 @@ export default function MapView({
       const pending = instructionsRef.current;
       appliedCountRef.current = pending.length;
       for (const inst of pending) replayInstruction(map, inst, drawnCountRef);
+      // Re-add storm layers on top after basemap switch
+      setupStormLayers(map);
+      updateStormData(map, stormReportCount);
     });
   }, [basemapIdx]);
 
@@ -649,6 +653,17 @@ export default function MapView({
       });
     }
     stormLayersInitRef.current = true;
+    // Ensure storm layers render on top of all other layers
+    const topOrder = [
+      "storm-track-line-glow",
+      "storm-track-line-layer",
+      "storm-track-glow",
+      "storm-track-dot",
+      "storm-track-letter",
+    ];
+    for (const id of topOrder) {
+      if (map.getLayer(id)) map.moveLayer(id);
+    }
   };
 
   const updateStormData = (map: MlMap, count: number) => {
@@ -684,11 +699,12 @@ export default function MapView({
     const map = mapRef.current;
     if (!map) return;
     const run = () => {
+      stormLayersInitRef.current = false;
       setupStormLayers(map);
       updateStormData(map, stormReportCount);
     };
     if (map.isStyleLoaded()) run();
-    else map.once("load", run);
+    else map.once("idle", run);
   }, [stormReportCount]);
 
   // Pulse animation via requestAnimationFrame
