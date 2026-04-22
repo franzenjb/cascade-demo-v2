@@ -461,7 +461,8 @@ function PageContent() {
       expires: payload.expires,
       scenarioId: payload.scenarioId,
     });
-    // Drip-feed storm reports: first after 3s, then every 15s, hold at H
+    // Drip-feed storm reports — ?speed=fast uses 5s intervals for recording
+    const dripMs = new URLSearchParams(window.location.search).get("speed") === "fast" ? 5000 : 15000;
     if (stormIntervalRef.current) clearInterval(stormIntervalRef.current);
     setStormComplete(false);
     const startDrip = () => {
@@ -469,7 +470,6 @@ function PageContent() {
       stormIntervalRef.current = setInterval(() => {
         setStormReportCount((prev) => {
           if (prev >= STORM_REPORTS.length) {
-            // All reports shown — stop interval, show restart after 30s
             if (stormIntervalRef.current) clearInterval(stormIntervalRef.current);
             stormIntervalRef.current = null;
             setTimeout(() => setStormComplete(true), 30000);
@@ -477,7 +477,7 @@ function PageContent() {
           }
           return prev + 1;
         });
-      }, 15000);
+      }, dripMs);
     };
     setTimeout(startDrip, 3000);
 
@@ -549,6 +549,7 @@ function PageContent() {
     raw.replace(/^Census Tract\s+/i, "");
 
   const restartStormTrack = () => {
+    const dripMs = new URLSearchParams(window.location.search).get("speed") === "fast" ? 5000 : 15000;
     setStormComplete(false);
     setStormReportCount(1);
     if (stormIntervalRef.current) clearInterval(stormIntervalRef.current);
@@ -562,7 +563,7 @@ function PageContent() {
         }
         return prev + 1;
       });
-    }, 15000);
+    }, dripMs);
   };
 
 
