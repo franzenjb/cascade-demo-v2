@@ -14,12 +14,14 @@ interface TriggerFiredPayload {
 
 interface TriggerButtonProps {
   onFired: (p: TriggerFiredPayload) => void;
+  /** When true, show the intro modal immediately on mount */
+  autoShow?: boolean;
 }
 
-export default function TriggerButton({ onFired }: TriggerButtonProps) {
+export default function TriggerButton({ onFired, autoShow }: TriggerButtonProps) {
   const [loading, setLoading] = useState(false);
   const [fired, setFired] = useState(false);
-  const [showIntro, setShowIntro] = useState(false);
+  const [showIntro, setShowIntro] = useState(!!autoShow);
 
   async function runSimulation() {
     if (loading) return;
@@ -63,16 +65,6 @@ export default function TriggerButton({ onFired }: TriggerButtonProps) {
 
   return (
     <>
-      <button
-        onClick={() => setShowIntro(true)}
-        disabled={loading}
-        className={`px-4 py-2 text-xs font-semibold border-2 border-arc-red text-arc-red hover:bg-arc-red hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
-          fired ? "bg-arc-red text-white" : "bg-white dark:bg-arc-gray-900"
-        }`}
-      >
-        {buttonLabel}
-      </button>
-
       {showIntro && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 dark:bg-black/70 px-4"

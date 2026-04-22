@@ -356,6 +356,60 @@ function PageContent() {
     setStreamTick((n) => n + 1);
   };
 
+  /** Fire the briefing API silently — tool results populate metrics, no chat UI. */
+  const runBackgroundBriefing = async (directive: string, sid: string) => {
+    setStreaming(true);
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          history: [],
+          message: "Produce the proactive situational briefing.",
+          trigger_directive: directive,
+          scenario_id: sid,
+        }),
+      });
+      if (!res.body) throw new Error("No response body");
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split("\n\n");
+        buffer = parts.pop() || "";
+        for (const part of parts) {
+          const line = part.replace(/^data:\s?/, "");
+          if (!line || line === "[DONE]") continue;
+          try {
+            const evt = JSON.parse(line);
+            if (evt.type === "tool_call" && evt.toolName) {
+              onToolCall(evt.toolName);
+            } else if (evt.type === "tool_result" && evt.toolName && evt.toolResult) {
+              try {
+                const parsed = JSON.parse(evt.toolResult);
+                if (parsed && typeof parsed === "object") {
+                  onToolResult(evt.toolName, parsed as Record<string, unknown>);
+                }
+              } catch { /* non-JSON */ }
+            } else if (evt.type === "map_instruction" && evt.mapInstruction) {
+              onMapInstruction(evt.mapInstruction);
+            }
+            // Ignore text deltas — BriefingCard shows the data directly
+          } catch { /* skip malformed */ }
+        }
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast(msg, "error");
+    } finally {
+      setStreaming(false);
+      onTurnEnd();
+    }
+  };
+
   const handleTriggerFired = (payload: {
     directive: string;
     polygon: unknown;
@@ -374,7 +428,7 @@ function PageContent() {
     setHighlightId(null);
     setDrillScope("footprint");
     setStreamTick(0);
-    setRightTab("assets");
+    setRightTab("briefing");
     setClearSignal((n) => n + 1);
     setFocusTarget({ center: payload.focusCenter, zoom: payload.focusZoom });
     setInstructions([
@@ -386,8 +440,11 @@ function PageContent() {
       },
     ]);
     setTriggerDirective(payload.directive);
-    setPendingBriefing(true);
+    setPendingBriefing(false);
     setScenarioId(payload.scenarioId);
+
+    // Fire the briefing API call silently — no user message bubble
+    runBackgroundBriefing(payload.directive, payload.scenarioId);
     setActiveWarning({
       nwsEventId: payload.nwsEventId,
       expires: payload.expires,
@@ -528,7 +585,11 @@ function PageContent() {
 
   return (
     <main className="h-screen flex flex-col bg-arc-cream dark:bg-arc-black">
-      {/* Top bar — identity + alert status + simulate. No numeric tiles. */}
+      {/* Auto-show trigger modal on load — no button in header */}
+      {!activeWarning && (
+        <TriggerButton onFired={handleTriggerFired} autoShow />
+      )}
+      {/* Top bar — identity + alert status. */}
       <header className="bg-arc-maroon text-white shadow-md no-print">
         <div className="px-4 py-2 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
@@ -567,7 +628,6 @@ function PageContent() {
                 </div>
               </div>
             )}
-            <TriggerButton onFired={handleTriggerFired} />
           </div>
         </div>
         <div className="h-[2px] bg-arc-red" />
