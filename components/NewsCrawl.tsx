@@ -25,7 +25,7 @@ const EXTRA_CRAWL: CrawlOnly[] = [
 
 // Merge storm reports + extra crawl-only items, sorted by time
 const ALL_CRAWL = [
-  ...STORM_REPORTS.map((r) => ({ time: r.time, source: r.source, text: r.text })),
+  ...STORM_REPORTS.map((r) => ({ time: r.time, source: r.source, text: `${r.label} — ${r.location}` })),
   ...EXTRA_CRAWL,
 ].sort((a, b) => {
   const parse = (t: string) => {

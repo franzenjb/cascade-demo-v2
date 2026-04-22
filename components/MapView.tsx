@@ -575,36 +575,37 @@ export default function MapView({
     else map.once("load", apply);
   }, [instructions]);
 
-  // Storm report track layer — drip-fed points + connecting line
+  // Storm sighting markers — Point A (first) and Point B (last), bold line between them
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !map.isStyleLoaded()) return;
 
     const visible = STORM_REPORTS.slice(0, stormReportCount);
+    if (visible.length === 0) return;
 
-    const lineCoords = visible.map((r) => [r.lon, r.lat]);
     const pointFeatures = visible.map((r, i) => ({
       type: "Feature" as const,
       geometry: { type: "Point" as const, coordinates: [r.lon, r.lat] },
       properties: {
-        label: r.label,
+        markerLabel: i === 0 ? "A" : "B",
         time: r.time,
-        source: r.source,
-        index: i,
-        isLatest: i === visible.length - 1,
+        label: r.label,
+        location: r.location,
+        lat: r.lat.toFixed(3),
+        displayText: `${r.time} · ${r.lat.toFixed(3)}°N\n${r.location}`,
       },
     }));
 
     const lineFC: GeoJSON.FeatureCollection = {
       type: "FeatureCollection",
       features:
-        lineCoords.length >= 2
+        visible.length >= 2
           ? [
               {
                 type: "Feature",
                 geometry: {
                   type: "LineString",
-                  coordinates: lineCoords,
+                  coordinates: visible.map((r) => [r.lon, r.lat]),
                 },
                 properties: {},
               },
@@ -616,7 +617,6 @@ export default function MapView({
       features: pointFeatures,
     };
 
-    // Update or create sources
     const lineSrc = map.getSource("storm-track-line") as maplibregl.GeoJSONSource | undefined;
     const ptSrc = map.getSource("storm-track-points") as maplibregl.GeoJSONSource | undefined;
 
@@ -624,15 +624,27 @@ export default function MapView({
       lineSrc.setData(lineFC);
     } else {
       map.addSource("storm-track-line", { type: "geojson", data: lineFC });
+      // Yellow glow behind line
+      map.addLayer({
+        id: "storm-track-line-glow",
+        type: "line",
+        source: "storm-track-line",
+        paint: {
+          "line-color": "#fbbf24",
+          "line-width": 10,
+          "line-opacity": 0.4,
+          "line-blur": 4,
+        },
+      });
+      // Bold red line
       map.addLayer({
         id: "storm-track-line-layer",
         type: "line",
         source: "storm-track-line",
         paint: {
           "line-color": "#dc2626",
-          "line-width": 3,
-          "line-dasharray": [4, 3],
-          "line-opacity": 0.85,
+          "line-width": 5,
+          "line-opacity": 1,
         },
       });
     }
@@ -641,89 +653,89 @@ export default function MapView({
       ptSrc.setData(pointFC);
     } else {
       map.addSource("storm-track-points", { type: "geojson", data: pointFC });
-      // Outer glow for latest report
+      // Outer glow — yellow halo
+      map.addLayer({
+        id: "storm-track-glow-outer",
+        type: "circle",
+        source: "storm-track-points",
+        paint: {
+          "circle-radius": 30,
+          "circle-color": "#fbbf24",
+          "circle-opacity": 0.25,
+          "circle-blur": 1,
+        },
+      });
+      // Pulsing ring — red
       map.addLayer({
         id: "storm-track-points-pulse",
         type: "circle",
         source: "storm-track-points",
-        filter: ["==", ["get", "isLatest"], true],
         paint: {
-          "circle-radius": 14,
+          "circle-radius": 22,
           "circle-color": "#dc2626",
-          "circle-opacity": 0.25,
+          "circle-opacity": 0.4,
         },
       });
-      // Point circles
+      // Big solid dot — red with yellow border
       map.addLayer({
         id: "storm-track-points-layer",
         type: "circle",
         source: "storm-track-points",
         paint: {
-          "circle-radius": [
-            "case",
-            ["==", ["get", "isLatest"], true],
-            8,
-            5,
-          ],
+          "circle-radius": 14,
           "circle-color": "#dc2626",
-          "circle-stroke-color": "#ffffff",
-          "circle-stroke-width": 2,
+          "circle-stroke-color": "#fbbf24",
+          "circle-stroke-width": 4,
         },
       });
-      // Labels
+      // A / B letter on the dot
+      map.addLayer({
+        id: "storm-track-marker-labels",
+        type: "symbol",
+        source: "storm-track-points",
+        layout: {
+          "text-field": ["get", "markerLabel"],
+          "text-size": 14,
+          "text-allow-overlap": true,
+          "text-font": ["Open Sans Bold"],
+        },
+        paint: {
+          "text-color": "#ffffff",
+        },
+      });
+      // Info label below: time · lat · location
       map.addLayer({
         id: "storm-track-labels",
         type: "symbol",
         source: "storm-track-points",
         layout: {
-          "text-field": ["concat", ["get", "time"], "\n", ["get", "label"]],
-          "text-size": 10,
-          "text-offset": [0, -1.8],
-          "text-anchor": "bottom",
-          "text-allow-overlap": false,
+          "text-field": ["get", "displayText"],
+          "text-size": 12,
+          "text-offset": [0, 2.5],
+          "text-anchor": "top",
+          "text-allow-overlap": true,
           "text-font": ["Open Sans Bold"],
+          "text-justify": "center",
         },
         paint: {
-          "text-color": "#dc2626",
+          "text-color": "#991b1b",
           "text-halo-color": "#ffffff",
-          "text-halo-width": 1.5,
+          "text-halo-width": 2,
         },
       });
 
-      // Pulse animation for latest report
+      // Pulse animation
       const animatePulse = () => {
         if (!map.getLayer("storm-track-points-pulse")) return;
         const t = (performance.now() % 2000) / 2000;
-        const radius = 10 + t * 18;
-        const opacity = 0.4 * (1 - t);
+        const radius = 16 + t * 20;
+        const opacity = 0.5 * (1 - t);
         map.setPaintProperty("storm-track-points-pulse", "circle-radius", radius);
         map.setPaintProperty("storm-track-points-pulse", "circle-opacity", opacity);
         pulseAnimRef.current = requestAnimationFrame(animatePulse);
       };
       cancelAnimationFrame(pulseAnimRef.current);
       animatePulse();
-
-      // Popup on click
-      map.on("click", "storm-track-points-layer", (e) => {
-        const f = e.features?.[0];
-        if (!f || !f.properties) return;
-        const p = f.properties;
-        new maplibregl.Popup({ offset: 12, closeButton: false })
-          .setLngLat(e.lngLat)
-          .setHTML(
-            `<div style="font-family:var(--font-data);font-size:11px;max-width:220px">
-              <strong style="color:#dc2626">${p.time} — ${p.source}</strong><br/>
-              ${p.label}
-            </div>`,
-          )
-          .addTo(map);
-      });
-      map.on("mouseenter", "storm-track-points-layer", () => {
-        map.getCanvas().style.cursor = "pointer";
-      });
-      map.on("mouseleave", "storm-track-points-layer", () => {
-        map.getCanvas().style.cursor = "";
-      });
     }
   }, [stormReportCount]);
 
