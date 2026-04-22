@@ -190,7 +190,6 @@ export default function MapView({
   const onTractClickRef = useRef<typeof onTractClick>(undefined);
   const [basemapIdx, setBasemapIdx] = useState(0);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const pulseAnimRef = useRef<number>(0);
 
   instructionsRef.current = instructions;
   onAssetClickRef.current = onAssetClick;
@@ -575,27 +574,26 @@ export default function MapView({
     else map.once("load", apply);
   }, [instructions]);
 
-  // Storm sighting markers — Point A (first) and Point B (last), bold line between them
+  // Storm sighting HTML markers — Point A and Point B with glowing dots + info labels
+  const stormMarkersRef = useRef<maplibregl.Marker[]>([]);
+
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !map.isStyleLoaded()) return;
 
+    // Remove old markers
+    stormMarkersRef.current.forEach((m) => m.remove());
+    stormMarkersRef.current = [];
+
     const visible = STORM_REPORTS.slice(0, stormReportCount);
-    if (visible.length === 0) return;
+    if (visible.length === 0) {
+      // Clear line if exists
+      const lineSrc = map.getSource("storm-track-line") as maplibregl.GeoJSONSource | undefined;
+      if (lineSrc) lineSrc.setData({ type: "FeatureCollection", features: [] });
+      return;
+    }
 
-    const pointFeatures = visible.map((r, i) => ({
-      type: "Feature" as const,
-      geometry: { type: "Point" as const, coordinates: [r.lon, r.lat] },
-      properties: {
-        markerLabel: i === 0 ? "A" : "B",
-        time: r.time,
-        label: r.label,
-        location: r.location,
-        lat: r.lat.toFixed(3),
-        displayText: `${r.time} · ${r.lat.toFixed(3)}°N\n${r.location}`,
-      },
-    }));
-
+    // Line between points
     const lineFC: GeoJSON.FeatureCollection = {
       type: "FeatureCollection",
       features:
@@ -612,31 +610,23 @@ export default function MapView({
             ]
           : [],
     };
-    const pointFC: GeoJSON.FeatureCollection = {
-      type: "FeatureCollection",
-      features: pointFeatures,
-    };
 
     const lineSrc = map.getSource("storm-track-line") as maplibregl.GeoJSONSource | undefined;
-    const ptSrc = map.getSource("storm-track-points") as maplibregl.GeoJSONSource | undefined;
-
     if (lineSrc) {
       lineSrc.setData(lineFC);
     } else {
       map.addSource("storm-track-line", { type: "geojson", data: lineFC });
-      // Yellow glow behind line
       map.addLayer({
         id: "storm-track-line-glow",
         type: "line",
         source: "storm-track-line",
         paint: {
           "line-color": "#fbbf24",
-          "line-width": 10,
-          "line-opacity": 0.4,
+          "line-width": 14,
+          "line-opacity": 0.5,
           "line-blur": 4,
         },
       });
-      // Bold red line
       map.addLayer({
         id: "storm-track-line-layer",
         type: "line",
@@ -649,94 +639,27 @@ export default function MapView({
       });
     }
 
-    if (ptSrc) {
-      ptSrc.setData(pointFC);
-    } else {
-      map.addSource("storm-track-points", { type: "geojson", data: pointFC });
-      // Outer glow — yellow halo
-      map.addLayer({
-        id: "storm-track-glow-outer",
-        type: "circle",
-        source: "storm-track-points",
-        paint: {
-          "circle-radius": 30,
-          "circle-color": "#fbbf24",
-          "circle-opacity": 0.25,
-          "circle-blur": 1,
-        },
-      });
-      // Pulsing ring — red
-      map.addLayer({
-        id: "storm-track-points-pulse",
-        type: "circle",
-        source: "storm-track-points",
-        paint: {
-          "circle-radius": 22,
-          "circle-color": "#dc2626",
-          "circle-opacity": 0.4,
-        },
-      });
-      // Big solid dot — red with yellow border
-      map.addLayer({
-        id: "storm-track-points-layer",
-        type: "circle",
-        source: "storm-track-points",
-        paint: {
-          "circle-radius": 14,
-          "circle-color": "#dc2626",
-          "circle-stroke-color": "#fbbf24",
-          "circle-stroke-width": 4,
-        },
-      });
-      // A / B letter on the dot
-      map.addLayer({
-        id: "storm-track-marker-labels",
-        type: "symbol",
-        source: "storm-track-points",
-        layout: {
-          "text-field": ["get", "markerLabel"],
-          "text-size": 14,
-          "text-allow-overlap": true,
-          "text-font": ["Open Sans Bold"],
-        },
-        paint: {
-          "text-color": "#ffffff",
-        },
-      });
-      // Info label below: time · lat · location
-      map.addLayer({
-        id: "storm-track-labels",
-        type: "symbol",
-        source: "storm-track-points",
-        layout: {
-          "text-field": ["get", "displayText"],
-          "text-size": 12,
-          "text-offset": [0, 2.5],
-          "text-anchor": "top",
-          "text-allow-overlap": true,
-          "text-font": ["Open Sans Bold"],
-          "text-justify": "center",
-        },
-        paint: {
-          "text-color": "#991b1b",
-          "text-halo-color": "#ffffff",
-          "text-halo-width": 2,
-        },
-      });
+    // HTML markers for each sighting
+    visible.forEach((r, i) => {
+      const letter = i === 0 ? "A" : "B";
 
-      // Pulse animation
-      const animatePulse = () => {
-        if (!map.getLayer("storm-track-points-pulse")) return;
-        const t = (performance.now() % 2000) / 2000;
-        const radius = 16 + t * 20;
-        const opacity = 0.5 * (1 - t);
-        map.setPaintProperty("storm-track-points-pulse", "circle-radius", radius);
-        map.setPaintProperty("storm-track-points-pulse", "circle-opacity", opacity);
-        pulseAnimRef.current = requestAnimationFrame(animatePulse);
-      };
-      cancelAnimationFrame(pulseAnimRef.current);
-      animatePulse();
-    }
+      const el = document.createElement("div");
+      el.className = "storm-sighting-marker";
+      el.innerHTML = `
+        <div class="storm-sighting-pulse"></div>
+        <div class="storm-sighting-dot">${letter}</div>
+        <div class="storm-sighting-label">
+          <strong>${letter}: ${r.label}</strong><br/>
+          ${r.time} · ${r.lat.toFixed(3)}°N<br/>
+          ${r.location}
+        </div>
+      `;
+
+      const marker = new maplibregl.Marker({ element: el, anchor: "center" })
+        .setLngLat([r.lon, r.lat])
+        .addTo(map);
+      stormMarkersRef.current.push(marker);
+    });
   }, [stormReportCount]);
 
   return (
