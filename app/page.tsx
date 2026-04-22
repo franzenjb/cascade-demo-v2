@@ -573,16 +573,6 @@ function PageContent() {
     window.print();
   };
 
-  const handlePillClick = (question: string) => {
-    // Feed the question into the chat system
-    const userMsg: ChatMessage = { role: "user", content: question };
-    onUserMessage(userMsg);
-    // Trigger the ChatPanel's streaming logic by setting pendingBriefing-like state
-    // Actually, we need to use the same mechanism as ChatPanel's submit
-    // So we'll switch to showing the chat with this question pre-loaded
-    setRightTab("briefing");
-  };
-
   return (
     <main className="h-screen flex flex-col bg-arc-cream dark:bg-arc-black">
       {/* Auto-show trigger modal on load — no button in header */}
@@ -741,16 +731,13 @@ function PageContent() {
           {rightTab === "briefing" && (
             <div className="flex flex-col min-h-0 flex-1 overflow-y-auto">
               {activeWarning && metrics ? (
-                <>
-                  <BriefingCard
-                    metrics={metrics}
-                    countdown={countdown}
-                    footprintByCategory={footprintByCategory}
-                    topTracts={topTracts}
-                    onTractClick={flyToTract}
-                  />
-                  <ActionPills onAsk={handlePillClick} />
-                </>
+                <BriefingCard
+                  metrics={metrics}
+                  countdown={countdown}
+                  footprintByCategory={footprintByCategory}
+                  topTracts={topTracts}
+                  onTractClick={flyToTract}
+                />
               ) : (
                 <ChatPanel
                   messages={messages}
@@ -922,58 +909,3 @@ function TabButton({
   );
 }
 
-const ACTION_PILLS = [
-  {
-    label: "Nearest Red Cross ERV depots",
-    question: "Show me the nearest Red Cross ERV depots to the center of the warning polygon with distances.",
-  },
-  {
-    label: "Full MHP list with unit counts",
-    question: "List every mobile home park inside the warning polygon with unit counts and percentage of residents over 65.",
-  },
-  {
-    label: "Shelter-capable schools",
-    question: "Which schools in the warning footprint have shelter agreements on file? Show enrollment and capacity.",
-  },
-  {
-    label: "Hospital surge capacity",
-    question: "What is the total hospital bed count and ER status for hospitals in the warning polygon?",
-  },
-  {
-    label: "Historical tornado frequency",
-    question: "How many tornado-related FEMA declarations has Pinellas County had? What is the historical frequency?",
-  },
-  {
-    label: "Highest-risk tracts deep dive",
-    question: "Give me a detailed breakdown of the top 3 most vulnerable tracts in the warning polygon — population, SVI themes, and what makes them high-risk.",
-  },
-  {
-    label: "Evacuation-sensitive populations",
-    question: "What populations in the footprint would be hardest to evacuate? Consider mobile homes, elderly concentrations, and areas without vehicle access.",
-  },
-  {
-    label: "Generate leadership briefing",
-    question: "Generate a shareable leadership briefing document summarizing the current tornado warning situation.",
-  },
-];
-
-function ActionPills({ onAsk }: { onAsk: (question: string) => void }) {
-  return (
-    <div className="px-4 py-4 border-t border-arc-gray-100 dark:border-arc-gray-700">
-      <div className="text-[10px] font-data uppercase tracking-widest text-arc-gray-500 dark:text-arc-gray-300 mb-3">
-        Ask Cascade
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {ACTION_PILLS.map((pill) => (
-          <button
-            key={pill.label}
-            onClick={() => onAsk(pill.question)}
-            className="px-3 py-1.5 text-xs font-data border border-arc-gray-300 dark:border-arc-gray-600 text-arc-black dark:text-arc-cream bg-arc-cream/50 dark:bg-arc-black/30 hover:border-arc-red hover:text-arc-red dark:hover:border-arc-red dark:hover:text-arc-red transition-colors"
-          >
-            {pill.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}

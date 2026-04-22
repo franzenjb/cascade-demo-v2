@@ -74,7 +74,7 @@ export default function BriefingCard({
     <div className="border-b border-arc-gray-100 dark:border-arc-gray-700 bg-white dark:bg-arc-gray-900">
       {/* Header */}
       <div className="px-4 py-3 bg-arc-red/10 dark:bg-arc-red/20 border-b border-arc-red/30">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 bg-arc-red rounded-full animate-pulse" />
             <span className="font-headline font-bold text-base text-arc-red uppercase tracking-wide">
@@ -87,6 +87,16 @@ export default function BriefingCard({
             </span>
           )}
         </div>
+        <p className="text-sm text-arc-black dark:text-arc-cream leading-relaxed">
+          The National Weather Service has issued a <span className="font-bold">Tornado Warning</span> for
+          central Pinellas County. A severe thunderstorm capable of producing a tornado was located
+          near Seminole, moving northeast at 35 mph. Path tracks NE across the peninsula from
+          Seminole through Largo, Pinellas Park, and into north St. Petersburg, exiting into Tampa Bay
+          near Gandy Boulevard.
+        </p>
+        <p className="text-xs text-arc-gray-500 dark:text-arc-gray-400 mt-1.5 font-data">
+          TAKE COVER NOW. Move to an interior room on the lowest floor of a sturdy building.
+        </p>
       </div>
 
       {/* Primary KPIs */}
