@@ -217,6 +217,7 @@ function PageContent() {
     null,
   );
   const expiryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stormIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const footprintIdsByCategory = useMemo(() => {
     const g: Partial<Record<AssetType, Set<string>>> = {};
@@ -250,9 +251,14 @@ function PageContent() {
   useEffect(() => {
     if (!activeWarning) {
       setCountdown(null);
+      setStormReportCount(0);
       if (expiryTimerRef.current) {
         clearTimeout(expiryTimerRef.current);
         expiryTimerRef.current = null;
+      }
+      if (stormIntervalRef.current) {
+        clearInterval(stormIntervalRef.current);
+        stormIntervalRef.current = null;
       }
       return;
     }
@@ -453,8 +459,17 @@ function PageContent() {
       expires: payload.expires,
       scenarioId: payload.scenarioId,
     });
-    // Show storm sighting markers immediately — delayed 3s for map to load
-    setTimeout(() => setStormReportCount(STORM_REPORTS.length), 3000);
+    // Drip-feed storm reports: first after 3s, then every 15s, cycle after H
+    if (stormIntervalRef.current) clearInterval(stormIntervalRef.current);
+    const startDrip = () => {
+      setStormReportCount(1);
+      stormIntervalRef.current = setInterval(() => {
+        setStormReportCount((prev) =>
+          prev >= STORM_REPORTS.length ? 1 : prev + 1,
+        );
+      }, 15000);
+    };
+    setTimeout(startDrip, 3000);
 
     // Filter assets to those inside the warning polygon
     const poly = payload.polygon as { type: string; coordinates: number[][][] };
@@ -722,6 +737,7 @@ function PageContent() {
                   footprintByCategory={footprintByCategory}
                   topTracts={topTracts}
                   onTractClick={flyToTract}
+                  stormReportCount={stormReportCount}
                 />
               ) : (
                 <ChatPanel
