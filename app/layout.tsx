@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import MobileWarning from "@/components/MobileWarning";
 
 export const metadata: Metadata = {
   title: "Cascade 2 — Pinellas County, FL",
@@ -24,7 +25,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body>{children}</body>
+      <body>
+        <MobileWarning />
+        {children}
+      </body>
     </html>
   );
 }
