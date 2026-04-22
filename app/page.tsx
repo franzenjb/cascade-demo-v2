@@ -12,6 +12,7 @@ import TriggerButton from "@/components/TriggerButton";
 import DrillPanel, { type DrillAsset } from "@/components/DrillPanel";
 import AllAssetsAccordion from "@/components/AllAssetsAccordion";
 import DetailsPanel from "@/components/DetailsPanel";
+import BriefingCard from "@/components/BriefingCard";
 import { AssetIcon } from "@/components/AssetIcons";
 import {
   ASSET_TYPES,
@@ -744,23 +745,36 @@ function PageContent() {
           </div>
 
           {rightTab === "briefing" && (
-            <ChatPanel
-              messages={messages}
-              onUserMessage={onUserMessage}
-              onAssistantDelta={onAssistantDelta}
-              onMapInstruction={onMapInstruction}
-              onToolCall={onToolCall}
-              onToolResult={onToolResult}
-              onTurnEnd={onTurnEnd}
-              streaming={streaming}
-              setStreaming={setStreaming}
-              triggerDirective={triggerDirective}
-              scenarioId={scenarioId}
-              pendingBriefing={pendingBriefing}
-              onBriefingSent={() => setPendingBriefing(false)}
-              onStreamError={(msg) => toast(msg, "error")}
-              toolActivity={toolActivity}
-            />
+            <div className="flex flex-col min-h-0 flex-1">
+              {activeWarning && metrics && (
+                <div className="flex-shrink-0 overflow-y-auto max-h-[60%]">
+                  <BriefingCard
+                    metrics={metrics}
+                    countdown={countdown}
+                    footprintByCategory={footprintByCategory}
+                    topTracts={topTracts}
+                    onTractClick={flyToTract}
+                  />
+                </div>
+              )}
+              <ChatPanel
+                messages={messages}
+                onUserMessage={onUserMessage}
+                onAssistantDelta={onAssistantDelta}
+                onMapInstruction={onMapInstruction}
+                onToolCall={onToolCall}
+                onToolResult={onToolResult}
+                onTurnEnd={onTurnEnd}
+                streaming={streaming}
+                setStreaming={setStreaming}
+                triggerDirective={triggerDirective}
+                scenarioId={scenarioId}
+                pendingBriefing={pendingBriefing}
+                onBriefingSent={() => setPendingBriefing(false)}
+                onStreamError={(msg) => toast(msg, "error")}
+                toolActivity={toolActivity}
+              />
+            </div>
           )}
 
           {rightTab === "assets" && activeCategory && (
